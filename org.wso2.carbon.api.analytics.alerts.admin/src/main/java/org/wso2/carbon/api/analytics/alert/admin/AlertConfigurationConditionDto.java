@@ -6,7 +6,6 @@ public class AlertConfigurationConditionDto {
     private String attributeValue;
     private String operation;
 
-
     public String getAttributeName() {
         return attributeName;
     }
@@ -22,6 +21,7 @@ public class AlertConfigurationConditionDto {
     public void setAttributeValue(String attributeValue) {
         this.attributeValue = attributeValue;
     }
+
 
     public String getOperation() {
         return operation;

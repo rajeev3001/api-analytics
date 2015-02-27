@@ -2,6 +2,7 @@ package org.wso2.carbon.api.analytics.alerts.core.internal;
 
 import org.apache.axis2.AxisFault;
 import org.wso2.carbon.api.analytics.alerts.core.internal.clients.*;
+import org.wso2.carbon.event.builder.stub.types.EventBuilderConfigurationDto;
 
 public class AlertConfigurationClientFacade {
 
@@ -32,6 +33,8 @@ public class AlertConfigurationClientFacade {
         return builderClient;
     }
 
+
+
     public EventFormatterAdminServiceClient getEventFormatterAdminServiceClient() throws AxisFault {
         if (this.formatterClient == null) {
             formatterClient = new EventFormatterAdminServiceClient(backendUrl, username, password);
@@ -39,12 +42,16 @@ public class AlertConfigurationClientFacade {
         return formatterClient;
     }
 
+
+
     public EventProcessorAdminServiceClient getEventProcessorAdminServiceClient() throws AxisFault {
         if (this.processorClient == null) {
             processorClient = new EventProcessorAdminServiceClient(backendUrl, username, password);
         }
         return processorClient;
     }
+
+
 
     public InputEventAdaptorManagerAdminServiceClient getInputEventAdaptorAdminServiceClient() throws AxisFault {
         if (this.inputAdaptorClient == null) {

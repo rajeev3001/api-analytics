@@ -1,7 +1,5 @@
 package org.wso2.carbon.api.analytics.alert.admin;
 
-import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
-
 public class AlertConfigurationDto {
 
     private AlertConfigurationConditionDto[] conditions;
@@ -9,10 +7,20 @@ public class AlertConfigurationDto {
     private String streamDefinition;
     private String configurationId;
     private String inputStreamId;
+    private String outputMapping;
 
     public String getConfigurationId() {
         return configurationId;
     }
+
+    public void setOutputMapping(String outputMapping) {
+        this.outputMapping = outputMapping;
+    }
+
+    public String getOutputMapping() {
+        return outputMapping;
+    }
+
 
     public void setConfigurationId(String configurationId) {
         this.configurationId = configurationId;

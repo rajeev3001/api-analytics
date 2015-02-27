@@ -16,9 +16,11 @@ import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdapto
 import org.wso2.carbon.event.processor.stub.types.ExecutionPlanConfigurationDto;
 import org.wso2.carbon.event.processor.stub.types.StreamConfigurationDto;
 
+import java.util.Map;
+
 public class AlertConfigurationHelper {
 
-    public String generateSiddhiQueries(AlertConfiguration configuration) {
+    public static String generateSiddhiQueries(AlertConfiguration configuration) {
 
         String streamName = configuration.getStreamDefinition().getName();
 
@@ -49,6 +51,9 @@ public class AlertConfigurationHelper {
                 case LESS_THAN:
                     builder.append("<");
                     break;
+                case EQUALS:
+                    builder.append("==");
+                    break;
                 // todo more operations.
             }
             if (concatenate) {
@@ -61,44 +66,46 @@ public class AlertConfigurationHelper {
         return builder.toString();
     }
 
-    public ExecutionPlanConfigurationDto getExecutionPlanDto(String execPlanName, StreamDefinition inputStreamDef, String siddhiQueries, String outputStream) throws AxisFault {
+    // String execPlanName, StreamDefinition inputStreamDef, String siddhiQueries, String outputStream
+    public static ExecutionPlanConfigurationDto getExecutionPlanDto(AlertConfiguration config)  {
         ExecutionPlanConfigurationDto dto = new ExecutionPlanConfigurationDto();
-        dto.setName(execPlanName);
+        dto.setName(config.getConfigurationId());
         StreamConfigurationDto importedStreamConfigDto = new StreamConfigurationDto();
 
-        importedStreamConfigDto.setSiddhiStreamName(inputStreamDef.getName());
-        importedStreamConfigDto.setStreamId(inputStreamDef.getStreamId());
+        importedStreamConfigDto.setSiddhiStreamName(config.getStreamDefinition().getName());
+        importedStreamConfigDto.setStreamId(config.getStreamDefinition().getStreamId());
         dto.addImportedStreams(importedStreamConfigDto);
-        dto.setQueryExpressions(siddhiQueries);
+        dto.setQueryExpressions(generateSiddhiQueries(config));
 
         StreamConfigurationDto exportedStreamConfigDto = new StreamConfigurationDto();
         // todo check validity
-        exportedStreamConfigDto.setStreamId(outputStream);
-        exportedStreamConfigDto.setSiddhiStreamName(outputStream);
+        exportedStreamConfigDto.setStreamId(getOutputStreamName(config) + ":" + config.getStreamDefinition().getVersion());
+        exportedStreamConfigDto.setSiddhiStreamName(getOutputStreamName(config));
         dto.addExportedStreams(exportedStreamConfigDto);
         return dto;
      }
 
 
-    public EventBuilderConfigurationDto getEventBuilderDto(String adaptorName, String adaptorType,
-                                                           String inputStreamName, String inputStreamVersion, String outputStreamName,
-                                                           String outputStreamVersion) {
+
+    public static EventBuilderConfigurationDto getEventBuilderDto(AlertConfiguration config) {
 
         // no custom mappings
         EventBuilderConfigurationDto dto = new EventBuilderConfigurationDto();
 
-        dto.setEventBuilderConfigName(adaptorName + "_" + inputStreamName + "_" + outputStreamName);
+        dto.setEventBuilderConfigName(AlertConfigurationValueHolder.getInstance().getInputEventAdaptorName() + "_" + config.getStreamDefinition().getName() + "_" + getOutputStreamName(config));
 
-        dto.setInputEventAdaptorName(adaptorName);
-        dto.setInputEventAdaptorType(adaptorType);
+        dto.setInputEventAdaptorName(AlertConfigurationValueHolder.getInstance().getInputEventAdaptorName());
+        dto.setInputEventAdaptorType(AlertConfigurationValueHolder.getInstance().getInputEventAdaptorType());
+
+        dto.setCustomMappingEnabled(false);
 
         EventBuilderMessagePropertyDto inStreamNameDto = new EventBuilderMessagePropertyDto();
         inStreamNameDto.setKey("stream");
-        inStreamNameDto.setValue(inputStreamName);
+        inStreamNameDto.setValue(config.getStreamDefinition().getStreamId());
 
         EventBuilderMessagePropertyDto inStreamVersionDto = new EventBuilderMessagePropertyDto();
         inStreamVersionDto.setKey("version");
-        inStreamVersionDto.setValue(inputStreamVersion);
+        inStreamVersionDto.setValue(config.getStreamDefinition().getVersion());
 
         EventBuilderMessagePropertyDto[] msgPropertyDtos = new EventBuilderMessagePropertyDto[2];
         msgPropertyDtos[0] = inStreamNameDto;
@@ -106,13 +113,15 @@ public class AlertConfigurationHelper {
 
         dto.setEventBuilderMessageProperties(msgPropertyDtos);
 
-        dto.setToStreamName(outputStreamName);
-        dto.setToStreamVersion(outputStreamVersion);
+
+
+        dto.setToStreamName(getOutputStreamName(config));
+        dto.setToStreamVersion(config.getStreamDefinition().getVersion());
 
         return dto;
     }
 
-    public InputEventAdaptorConfigurationInfoDto getInputEventAdaptorDto(String name, String type) {
+    public static InputEventAdaptorConfigurationInfoDto getInputEventAdaptorDto(String name, String type) {
         InputEventAdaptorConfigurationInfoDto dto = new InputEventAdaptorConfigurationInfoDto();
 
         dto.setEventAdaptorName(name);
@@ -121,7 +130,7 @@ public class AlertConfigurationHelper {
         return dto;
     }
 
-    public OutputEventAdaptorConfigurationInfoDto getOutputEventAdaptorDto(String name, String type) {
+    public static OutputEventAdaptorConfigurationInfoDto getOutputEventAdaptorDto(String name, String type) {
         OutputEventAdaptorConfigurationInfoDto dto = new OutputEventAdaptorConfigurationInfoDto();
 
         dto.setEventAdaptorName(name);
@@ -130,35 +139,42 @@ public class AlertConfigurationHelper {
         return dto;
     }
 
-    public EventFormatterConfigurationDto getEventFormatterDto(String fromStreamName, String fromStreamVersion,
+    /*
+    String fromStreamName, String fromStreamVersion,
                                                                String customMapping, String toAdaptorName, String toAdaptorType,
-                                                               String[][] toAdaptorProperties) {
+                                                               String[][] toAdaptorProperties
+     */
+    public static EventFormatterConfigurationDto getEventFormatterDto(AlertConfiguration config) {
         EventFormatterConfigurationDto dto = new EventFormatterConfigurationDto();
 
-        dto.setEventFormatterName(toAdaptorName + "_" + fromStreamName + "_");
+        dto.setEventFormatterName(AlertConfigurationValueHolder.getInstance().getOutputEventAdaptorName() + "_" + config.getStreamDefinition().getName() + "_");
 
-        dto.setFromStreamNameWithVersion(fromStreamName + ":" + fromStreamVersion);
+        dto.setFromStreamNameWithVersion(getOutputStreamName(config) + ":" + config.getStreamDefinition().getVersion());
 
         TextOutputMappingDto txtDto = new TextOutputMappingDto();
-        txtDto.setMappingText(customMapping);
+        txtDto.setMappingText(config.getOutputMapping());
 
         dto.setTextOutputMappingDto(txtDto);
 
         ToPropertyConfigurationDto toDto = new ToPropertyConfigurationDto();
-        toDto.setEventAdaptorName(toAdaptorName);
-        toDto.setEventAdaptorType(toAdaptorType);
+        toDto.setEventAdaptorName(AlertConfigurationValueHolder.getInstance().getOutputEventAdaptorName());
+        toDto.setEventAdaptorType(AlertConfigurationValueHolder.getInstance().getOutputEventAdaptorType());
 
-        EventFormatterPropertyDto[] propDto = new EventFormatterPropertyDto[toAdaptorProperties.length];
-
-        for (int i= 0;i<toAdaptorProperties.length ;i++) {
+        EventFormatterPropertyDto[] propDto = new EventFormatterPropertyDto[AlertConfigurationValueHolder.getInstance().getOutputAdaptorProperties().keySet().size()];
+        int i = 0;
+        for (Map.Entry<String, String> entry: AlertConfigurationValueHolder.getInstance().getOutputAdaptorProperties().entrySet()) {
             propDto[i] = new EventFormatterPropertyDto();
-            propDto[i].setKey(toAdaptorProperties[i][0]);
-            propDto[i].setValue(toAdaptorProperties[i][1]);
-
+            propDto[i].setKey(entry.getKey());
+            propDto[i].setValue(entry.getValue());
         }
+
         toDto.setOutputEventAdaptorMessageConfiguration(propDto);
         dto.setToPropertyConfigurationDto(toDto);
 
         return dto;
+    }
+
+    public static String getOutputStreamName(AlertConfiguration config) {
+        return config.getStreamDefinition().getName().replaceAll("\\.", "_") + "_out" ;
     }
 }

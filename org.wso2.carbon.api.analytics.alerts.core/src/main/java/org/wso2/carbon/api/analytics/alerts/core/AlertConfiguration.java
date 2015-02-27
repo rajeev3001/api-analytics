@@ -29,6 +29,8 @@ public class AlertConfiguration {
     // todo infer these from input and conditions
     private Map<String, String> outputAttributes;
     private String outputStream;
+    private String outputMapping;
+
 
     public List<AlertConfigurationCondition> getConditions() {
         return conditions;
@@ -64,6 +66,14 @@ public class AlertConfiguration {
 
     public void setConfigurationId(String configurationId) {
         this.configurationId = configurationId;
+    }
+
+    public String getOutputMapping() {
+        return outputMapping;
+    }
+
+    public void setOutputMapping(String outputMapping) {
+        this.outputMapping = outputMapping;
     }
 
     public void setOutputAttributes(Map<String, String> outputAttributes) {

@@ -35,6 +35,11 @@ public class EventBuilderAdminServiceClient {
         return eventBuilderAdminServiceStub._getServiceClient();
     }
 
+    public void deployEventBuilderConfiguration(EventBuilderConfigurationDto dto) throws RemoteException {
+        eventBuilderAdminServiceStub.deployTextEventBuilderConfiguration(dto.getEventBuilderConfigName(), dto.getToStreamName() + ":" + dto.getToStreamVersion(),
+        dto.getInputEventAdaptorName(), dto.getInputEventAdaptorType(), null, null, dto.getCustomMappingEnabled());
+    }
+
     public int getActiveEventBuilderCount()
             throws RemoteException {
         try {
@@ -123,6 +128,8 @@ public class EventBuilderAdminServiceClient {
             throw new RemoteException();
         }
     }
+
+
 
     public EventBuilderConfigurationDto getEventBuilderConfiguration(String eventBuilderConfiguration)
             throws RemoteException {

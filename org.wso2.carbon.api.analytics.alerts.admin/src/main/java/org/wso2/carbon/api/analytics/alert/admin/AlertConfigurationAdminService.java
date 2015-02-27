@@ -27,11 +27,11 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
                 AlertConfigurationCondition condition = new AlertConfigurationCondition();
                 condition.setAttribute(conditionDto.getAttributeName());
                 condition.setTargetValue(conditionDto.getAttributeValue());
-                if (conditionDto.getOperation().equals("<")) {
+                if (conditionDto.getOperation().equals(AlertConfigurationCondition.Operation.LESS_THAN.symbol())) {
                     condition.setOperation(AlertConfigurationCondition.Operation.LESS_THAN);
-                } else if (conditionDto.getOperation().equals(">")) {
+                } else if (conditionDto.getOperation().equals(AlertConfigurationCondition.Operation.GREATER_THAN.symbol())) {
                     condition.setOperation(AlertConfigurationCondition.Operation.GREATER_THAN);
-                } else if (conditionDto.getOperation().equals("==")) {
+                } else if (conditionDto.getOperation().equals(AlertConfigurationCondition.Operation.EQUALS.symbol())) {
                     condition.setOperation(AlertConfigurationCondition.Operation.EQUALS);
                 }
                 conditions.add(condition);
@@ -40,11 +40,11 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
             // todo throw exception?
         }
         alertConfig.setConditions(conditions);
-
+alertConfig.setOutputMapping(configDto.getOutputMapping());
         StreamDefinition streamDefinition = new StreamDefinition(configDto.getInputStreamId());
         String[] attributes = configDto.getStreamDefinition().split(",");
 
-        for (String attribute: attributes) {
+        for (String attribute : attributes) {
             String[] nameType = attribute.trim().split(" ");
             if (nameType[1].equals("int")) {
                 streamDefinition.addPayloadData(nameType[0], AttributeType.INT);
@@ -81,11 +81,11 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
     }
 
     public AlertConfigurationDto[] getAllAlertConfigurations() throws AxisFault {
-       List<AlertConfiguration> allConfigs = AlertConfigurationAdminValueHolder.getAlertConfigurationService().getAllAlertConfigurations(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
+        List<AlertConfiguration> allConfigs = AlertConfigurationAdminValueHolder.getAlertConfigurationService().getAllAlertConfigurations(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
         AlertConfigurationDto[] allDtos = new AlertConfigurationDto[allConfigs.size()];
         if (allConfigs.size() > 0) {
 
-            for (  int i =0;i<allConfigs.size();i++) {
+            for (int i = 0; i < allConfigs.size(); i++) {
                 AlertConfiguration config = allConfigs.get(i);
 
                 allDtos[i] = new AlertConfigurationDto();
@@ -95,7 +95,7 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
 
                 StringBuilder streamDef = new StringBuilder("");
                 boolean appendComma = false;
-                for (Attribute at: config.getStreamDefinition().getPayloadData()) {
+                for (Attribute at : config.getStreamDefinition().getPayloadData()) {
                     if (appendComma) {
                         streamDef.append(",");
                     }
@@ -118,6 +118,7 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
                     j++;
                 }
                 allDtos[i].setConditions(conditionDtos);
+                allDtos[i].setOutputMapping(config.getOutputMapping());
                 i++;
             }
         }

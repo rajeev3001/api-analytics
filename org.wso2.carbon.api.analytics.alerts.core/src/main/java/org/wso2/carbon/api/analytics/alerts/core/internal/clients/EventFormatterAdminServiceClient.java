@@ -130,4 +130,29 @@ public class EventFormatterAdminServiceClient {
             throw new RemoteException();
         }
     }
+
+    public void addEventFormatterConfiguration(EventFormatterConfigurationDto dto) throws RemoteException{
+
+        /*
+        java.lang.String eventFormatterName257, java.lang.String streamNameWithVersion258,
+         java.lang.String eventAdaptorName259, java.lang.String eventAdaptorType260,
+          java.lang.String textData261,
+        org.wso2.carbon.event.formatter.stub.types.PropertyDto[] outputPropertyConfiguration262,
+         java.lang.String dataFrom263, boolean mappingEnabled264
+         */
+
+        // dataFrom == inline
+
+        EventFormatterPropertyDto[] propDtos = dto.getToPropertyConfigurationDto().getOutputEventAdaptorMessageConfiguration();
+        PropertyDto[] stubDtos = new PropertyDto[propDtos.length];
+        for (int i =0;i<propDtos.length;i++) {
+            stubDtos[i] = new PropertyDto();
+            stubDtos[i].setKey(propDtos[i].getKey());
+            stubDtos[i].setValue(propDtos[i].getValue());
+        }
+
+        eventFormatterAdminServiceStub.deployTextEventFormatterConfiguration(dto.getEventFormatterName(), dto.getFromStreamNameWithVersion(),
+                dto.getToPropertyConfigurationDto().getEventAdaptorName(), dto.getToPropertyConfigurationDto().getEventAdaptorType(),
+               dto.getTextOutputMappingDto().getMappingText(), stubDtos, "true", true );
+    }
 }
