@@ -1,5 +1,5 @@
 <serviceGroup>
-    <service name="APIAlertsAdminService" scope="transportsession">
+    <service name="APIAlertsConfigurationService" scope="transportsession">
         <transports>
             <transport>https</transport>
         </transports>
@@ -13,7 +13,7 @@
         </messageReceivers>
 
         <parameter name="ServiceClass">
-            org.wso2.carbon.api.analytics.alert.admin.AlertConfigurationAdminService
+            org.wso2.carbon.api.analytics.alerts.admin.AlertConfigurationAdminService
         </parameter>
 
         <parameter name="AuthorizationAction" locked="false">
@@ -39,6 +39,7 @@
     </operation>
 
 
+    </service>
     <parameter name="adminService" locked="true">true</parameter>
     <parameter name="hiddenService" locked="true">true</parameter>
 </serviceGroup>

@@ -1,4 +1,4 @@
-package org.wso2.carbon.api.analytics.alert.admin;
+package org.wso2.carbon.api.analytics.alerts.admin;
 
 public class AlertConfigurationDto {
 

@@ -1,4 +1,4 @@
-package org.wso2.carbon.api.analytics.alert.admin.internal.ds;
+package org.wso2.carbon.api.analytics.alerts.admin.internal.ds;
 
 
 import org.osgi.service.component.ComponentContext;

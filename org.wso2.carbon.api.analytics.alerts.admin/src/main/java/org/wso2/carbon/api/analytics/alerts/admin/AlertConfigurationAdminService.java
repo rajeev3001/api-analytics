@@ -1,7 +1,7 @@
-package org.wso2.carbon.api.analytics.alert.admin;
+package org.wso2.carbon.api.analytics.alerts.admin;
 
 import org.apache.axis2.AxisFault;
-import org.wso2.carbon.api.analytics.alert.admin.internal.ds.AlertConfigurationAdminValueHolder;
+import org.wso2.carbon.api.analytics.alerts.admin.internal.ds.AlertConfigurationAdminValueHolder;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
 import org.wso2.carbon.api.analytics.alerts.core.exception.AlertConfigurationException;
