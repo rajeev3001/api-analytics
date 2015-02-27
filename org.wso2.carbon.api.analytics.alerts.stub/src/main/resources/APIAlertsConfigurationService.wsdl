@@ -1,0 +1,182 @@
+
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns1="http://org.apache.axis2/xsd" xmlns:ns="http://admin.alerts.analytics.api.carbon.wso2.org" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:ax23="http://admin.alerts.analytics.api.carbon.wso2.org/xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://admin.alerts.analytics.api.carbon.wso2.org">
+    <wsdl:documentation>APIAlertsConfigurationService</wsdl:documentation>
+    <wsdl:types>
+        <xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://admin.alerts.analytics.api.carbon.wso2.org/xsd">
+            <xs:complexType name="AlertConfigurationDto">
+                <xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="conditions" nillable="true" type="ax23:AlertConfigurationConditionDto"></xs:element>
+                    <xs:element minOccurs="0" name="configurationId" nillable="true" type="xs:string"></xs:element>
+                    <xs:element minOccurs="0" name="inputStreamId" nillable="true" type="xs:string"></xs:element>
+                    <xs:element minOccurs="0" name="outputMapping" nillable="true" type="xs:string"></xs:element>
+                    <xs:element minOccurs="0" name="streamDefinition" nillable="true" type="xs:string"></xs:element>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="AlertConfigurationConditionDto">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="attributeName" nillable="true" type="xs:string"></xs:element>
+                    <xs:element minOccurs="0" name="attributeValue" nillable="true" type="xs:string"></xs:element>
+                    <xs:element minOccurs="0" name="operation" nillable="true" type="xs:string"></xs:element>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema xmlns:ax24="http://admin.alerts.analytics.api.carbon.wso2.org/xsd" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://admin.alerts.analytics.api.carbon.wso2.org">
+            <xs:import namespace="http://admin.alerts.analytics.api.carbon.wso2.org/xsd"></xs:import>
+            <xs:element name="removeAlertConfiguration">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="configurationId" nillable="true" type="xs:string"></xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getAllAlertConfigurations">
+                <xs:complexType>
+                    <xs:sequence></xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getAllAlertConfigurationsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element maxOccurs="unbounded" minOccurs="0" name="return" nillable="true" type="ax23:AlertConfigurationDto"></xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="addAlertConfiguration">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="configDto" nillable="true" type="ax23:AlertConfigurationDto"></xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="getAllAlertConfigurationsRequest">
+        <wsdl:part name="parameters" element="ns:getAllAlertConfigurations"></wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="getAllAlertConfigurationsResponse">
+        <wsdl:part name="parameters" element="ns:getAllAlertConfigurationsResponse"></wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="addAlertConfigurationRequest">
+        <wsdl:part name="parameters" element="ns:addAlertConfiguration"></wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="addAlertConfigurationResponse"></wsdl:message>
+    <wsdl:message name="removeAlertConfigurationRequest">
+        <wsdl:part name="parameters" element="ns:removeAlertConfiguration"></wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="removeAlertConfigurationResponse"></wsdl:message>
+    <wsdl:portType name="APIAlertsConfigurationServicePortType">
+        <wsdl:operation name="getAllAlertConfigurations">
+            <wsdl:input message="ns:getAllAlertConfigurationsRequest" wsaw:Action="urn:getAllAlertConfigurations"></wsdl:input>
+            <wsdl:output message="ns:getAllAlertConfigurationsResponse" wsaw:Action="urn:getAllAlertConfigurationsResponse"></wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addAlertConfiguration">
+            <wsdl:input message="ns:addAlertConfigurationRequest" wsaw:Action="urn:addAlertConfiguration"></wsdl:input>
+            <wsdl:output message="ns:addAlertConfigurationResponse" wsaw:Action="urn:addAlertConfigurationResponse"></wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="removeAlertConfiguration">
+            <wsdl:input message="ns:removeAlertConfigurationRequest" wsaw:Action="urn:removeAlertConfiguration"></wsdl:input>
+            <wsdl:output message="ns:removeAlertConfigurationResponse" wsaw:Action="urn:removeAlertConfigurationResponse"></wsdl:output>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="APIAlertsConfigurationServiceSoap11Binding" type="ns:APIAlertsConfigurationServicePortType">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"></soap:binding>
+        <wsdl:operation name="getAllAlertConfigurations">
+            <soap:operation soapAction="urn:getAllAlertConfigurations" style="document"></soap:operation>
+            <wsdl:input>
+                <soap:body use="literal"></soap:body>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"></soap:body>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addAlertConfiguration">
+            <soap:operation soapAction="urn:addAlertConfiguration" style="document"></soap:operation>
+            <wsdl:input>
+                <soap:body use="literal"></soap:body>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"></soap:body>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="removeAlertConfiguration">
+            <soap:operation soapAction="urn:removeAlertConfiguration" style="document"></soap:operation>
+            <wsdl:input>
+                <soap:body use="literal"></soap:body>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"></soap:body>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="APIAlertsConfigurationServiceSoap12Binding" type="ns:APIAlertsConfigurationServicePortType">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"></soap12:binding>
+        <wsdl:operation name="getAllAlertConfigurations">
+            <soap12:operation soapAction="urn:getAllAlertConfigurations" style="document"></soap12:operation>
+            <wsdl:input>
+                <soap12:body use="literal"></soap12:body>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"></soap12:body>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addAlertConfiguration">
+            <soap12:operation soapAction="urn:addAlertConfiguration" style="document"></soap12:operation>
+            <wsdl:input>
+                <soap12:body use="literal"></soap12:body>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"></soap12:body>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="removeAlertConfiguration">
+            <soap12:operation soapAction="urn:removeAlertConfiguration" style="document"></soap12:operation>
+            <wsdl:input>
+                <soap12:body use="literal"></soap12:body>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"></soap12:body>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="APIAlertsConfigurationServiceHttpBinding" type="ns:APIAlertsConfigurationServicePortType">
+        <http:binding verb="POST"></http:binding>
+        <wsdl:operation name="getAllAlertConfigurations">
+            <http:operation location="getAllAlertConfigurations"></http:operation>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addAlertConfiguration">
+            <http:operation location="addAlertConfiguration"></http:operation>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="removeAlertConfiguration">
+            <http:operation location="removeAlertConfiguration"></http:operation>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="APIAlertsConfigurationService">
+        <wsdl:port name="APIAlertsConfigurationServiceHttpsSoap11Endpoint" binding="ns:APIAlertsConfigurationServiceSoap11Binding">
+            <soap:address location="https://10.100.0.121:9445/services/APIAlertsConfigurationService.APIAlertsConfigurationServiceHttpsSoap11Endpoint/"></soap:address>
+        </wsdl:port>
+        <wsdl:port name="APIAlertsConfigurationServiceHttpsSoap12Endpoint" binding="ns:APIAlertsConfigurationServiceSoap12Binding">
+            <soap12:address location="https://10.100.0.121:9445/services/APIAlertsConfigurationService.APIAlertsConfigurationServiceHttpsSoap12Endpoint/"></soap12:address>
+        </wsdl:port>
+        <wsdl:port name="APIAlertsConfigurationServiceHttpsEndpoint" binding="ns:APIAlertsConfigurationServiceHttpBinding">
+            <http:address location="https://10.100.0.121:9445/services/APIAlertsConfigurationService.APIAlertsConfigurationServiceHttpsEndpoint/"></http:address>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
