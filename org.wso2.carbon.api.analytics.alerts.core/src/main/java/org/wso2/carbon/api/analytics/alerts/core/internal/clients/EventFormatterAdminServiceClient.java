@@ -1,3 +1,21 @@
+/*
+*  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+*
+*  WSO2 Inc. licenses this file to you under the Apache License,
+*  Version 2.0 (the "License"); you may not use this file except
+*  in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 package org.wso2.carbon.api.analytics.alerts.core.internal.clients;
 
 
@@ -17,7 +35,7 @@ public class EventFormatterAdminServiceClient {
     private String endPoint;
 
     public EventFormatterAdminServiceClient(String backEndUrl, String sessionCookie) throws
-                                                                                     AxisFault {
+            AxisFault {
         this.endPoint = backEndUrl + serviceName;
         eventFormatterAdminServiceStub = new EventFormatterAdminServiceStub(endPoint);
         AuthenticateStub.authenticateStub(sessionCookie, eventFormatterAdminServiceStub);
@@ -85,7 +103,7 @@ public class EventFormatterAdminServiceClient {
                                                   String dataFrom, boolean mappingEnabled)
             throws RemoteException {
         try {
-            eventFormatterAdminServiceStub.deployXmlEventFormatterConfiguration(eventFormatterName, streamNameWithVersion, transportAdaptorName, transportAdaptorType, textData, outputPropertyConfiguration,dataFrom, mappingEnabled);
+            eventFormatterAdminServiceStub.deployXmlEventFormatterConfiguration(eventFormatterName, streamNameWithVersion, transportAdaptorName, transportAdaptorType, textData, outputPropertyConfiguration, dataFrom, mappingEnabled);
         } catch (RemoteException e) {
             log.error("RemoteException", e);
             throw new RemoteException();
@@ -131,7 +149,7 @@ public class EventFormatterAdminServiceClient {
         }
     }
 
-    public void addEventFormatterConfiguration(EventFormatterConfigurationDto dto) throws RemoteException{
+    public void addEventFormatterConfiguration(EventFormatterConfigurationDto dto) throws RemoteException {
 
         /*
         java.lang.String eventFormatterName257, java.lang.String streamNameWithVersion258,
@@ -145,7 +163,7 @@ public class EventFormatterAdminServiceClient {
 
         EventFormatterPropertyDto[] propDtos = dto.getToPropertyConfigurationDto().getOutputEventAdaptorMessageConfiguration();
         PropertyDto[] stubDtos = new PropertyDto[propDtos.length];
-        for (int i =0;i<propDtos.length;i++) {
+        for (int i = 0; i < propDtos.length; i++) {
             stubDtos[i] = new PropertyDto();
             stubDtos[i].setKey(propDtos[i].getKey());
             stubDtos[i].setValue(propDtos[i].getValue());
@@ -153,6 +171,6 @@ public class EventFormatterAdminServiceClient {
 
         eventFormatterAdminServiceStub.deployTextEventFormatterConfiguration(dto.getEventFormatterName(), dto.getFromStreamNameWithVersion(),
                 dto.getToPropertyConfigurationDto().getEventAdaptorName(), dto.getToPropertyConfigurationDto().getEventAdaptorType(),
-               dto.getTextOutputMappingDto().getMappingText(), stubDtos, "true", true );
+                dto.getTextOutputMappingDto().getMappingText(), stubDtos, "true", true);
     }
 }

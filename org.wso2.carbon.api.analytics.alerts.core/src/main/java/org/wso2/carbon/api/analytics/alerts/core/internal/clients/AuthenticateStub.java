@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,9 +56,9 @@ public class AuthenticateStub {
         option.setManageSession(true);
         option.setTimeOutInMilliSeconds(soTimeout);
         System.out.println("XXXXXXXXXXXXXXXXXXX" +
-                           backendURL +  client.getServiceContext().getAxisService().getName().replaceAll("[^a-zA-Z]", ""));
+                backendURL + client.getServiceContext().getAxisService().getName().replaceAll("[^a-zA-Z]", ""));
         option.setProperty(org.apache.axis2.transport.http.HTTPConstants.COOKIE_STRING, sessionCookie);
-        option.setTo(new EndpointReference(backendURL +  client.getServiceContext().getAxisService().getName().replaceAll("[^a-zA-Z]", "")));
+        option.setTo(new EndpointReference(backendURL + client.getServiceContext().getAxisService().getName().replaceAll("[^a-zA-Z]", "")));
         if (log.isDebugEnabled()) {
             log.debug("AuthenticateStub : Stub created with session " + sessionCookie);
         }

@@ -1,10 +1,26 @@
+/*
+*  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+*
+*  WSO2 Inc. licenses this file to you under the Apache License,
+*  Version 2.0 (the "License"); you may not use this file except
+*  in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 package org.wso2.carbon.api.analytics.alerts.core.internal;
 
-import org.apache.axis2.AxisFault;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
 import org.wso2.carbon.databridge.commons.Attribute;
-import org.wso2.carbon.databridge.commons.StreamDefinition;
 import org.wso2.carbon.event.builder.stub.types.EventBuilderConfigurationDto;
 import org.wso2.carbon.event.builder.stub.types.EventBuilderMessagePropertyDto;
 import org.wso2.carbon.event.formatter.stub.types.EventFormatterConfigurationDto;
@@ -16,6 +32,7 @@ import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdapto
 import org.wso2.carbon.event.processor.stub.types.ExecutionPlanConfigurationDto;
 import org.wso2.carbon.event.processor.stub.types.StreamConfigurationDto;
 
+import java.util.List;
 import java.util.Map;
 
 public class AlertConfigurationHelper {
@@ -28,7 +45,7 @@ public class AlertConfigurationHelper {
         builder.append(streamName);
         builder.append(" (");
 
-        for (Attribute at: configuration.getStreamDefinition().getPayloadData()) {
+        for (Attribute at : configuration.getStreamDefinition().getPayloadData()) {
             builder.append(at.getName());
             builder.append(" ");
             builder.append(at.getType().toString().toLowerCase());
@@ -42,7 +59,7 @@ public class AlertConfigurationHelper {
         builder.append('[');
 
         boolean concatenate = false;
-        for (AlertConfigurationCondition condition: configuration.getConditions()) {
+        for (AlertConfigurationCondition condition : configuration.getConditions()) {
             builder.append(condition.getAttribute());
             switch (condition.getOperation()) {
                 case GREATER_THAN:
@@ -67,7 +84,7 @@ public class AlertConfigurationHelper {
     }
 
     // String execPlanName, StreamDefinition inputStreamDef, String siddhiQueries, String outputStream
-    public static ExecutionPlanConfigurationDto getExecutionPlanDto(AlertConfiguration config)  {
+    public static ExecutionPlanConfigurationDto getExecutionPlanDto(AlertConfiguration config) {
         ExecutionPlanConfigurationDto dto = new ExecutionPlanConfigurationDto();
         dto.setName(config.getConfigurationId());
         StreamConfigurationDto importedStreamConfigDto = new StreamConfigurationDto();
@@ -83,8 +100,7 @@ public class AlertConfigurationHelper {
         exportedStreamConfigDto.setSiddhiStreamName(getOutputStreamName(config));
         dto.addExportedStreams(exportedStreamConfigDto);
         return dto;
-     }
-
+    }
 
 
     public static EventBuilderConfigurationDto getEventBuilderDto(AlertConfiguration config) {
@@ -112,7 +128,6 @@ public class AlertConfigurationHelper {
         msgPropertyDtos[1] = inStreamVersionDto;
 
         dto.setEventBuilderMessageProperties(msgPropertyDtos);
-
 
 
         dto.setToStreamName(getOutputStreamName(config));
@@ -162,7 +177,7 @@ public class AlertConfigurationHelper {
 
         EventFormatterPropertyDto[] propDto = new EventFormatterPropertyDto[AlertConfigurationValueHolder.getInstance().getOutputAdaptorProperties().keySet().size()];
         int i = 0;
-        for (Map.Entry<String, String> entry: AlertConfigurationValueHolder.getInstance().getOutputAdaptorProperties().entrySet()) {
+        for (Map.Entry<String, String> entry : AlertConfigurationValueHolder.getInstance().getOutputAdaptorProperties().entrySet()) {
             propDto[i] = new EventFormatterPropertyDto();
             propDto[i].setKey(entry.getKey());
             propDto[i].setValue(entry.getValue());
@@ -175,6 +190,10 @@ public class AlertConfigurationHelper {
     }
 
     public static String getOutputStreamName(AlertConfiguration config) {
-        return config.getStreamDefinition().getName().replaceAll("\\.", "_") + "_out" ;
+        return config.getStreamDefinition().getName().replaceAll("\\.", "_") + "_out";
+    }
+
+    public static List<AlertConfiguration> readConfigurations(int tenantId) {
+        return null;
     }
 }

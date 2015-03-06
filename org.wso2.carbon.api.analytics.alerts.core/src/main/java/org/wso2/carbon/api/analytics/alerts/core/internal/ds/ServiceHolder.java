@@ -16,10 +16,20 @@
 * under the License.
 */
 
-package org.wso2.carbon.api.analytics.alerts.core.internal;
+package org.wso2.carbon.api.analytics.alerts.core.internal.ds;
 
-public class AlertConfigurationConstants {
+import org.wso2.carbon.registry.core.service.RegistryService;
 
-    public static final String CONFIG_PREFIX = "ac_";
-    public static final String REGISTRY_PATH = "/APIAlertConfigurations";
+public class ServiceHolder {
+
+    private static RegistryService registryService;
+
+    public static void setRegistryService(RegistryService registryService) {
+        ServiceHolder.registryService = registryService;
+    }
+
+    public static RegistryService getRegistryService() {
+        return registryService;
+    }
+
 }
