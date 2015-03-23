@@ -24,6 +24,8 @@ import org.wso2.carbon.api.analytics.alerts.core.exception.AlertConfigurationExc
 import org.wso2.carbon.api.analytics.alerts.core.internal.AlertConfigurationClientFactory;
 import org.wso2.carbon.api.analytics.alerts.core.internal.AlertConfigurationHelper;
 import org.wso2.carbon.api.analytics.alerts.core.internal.AlertConfigurationStore;
+import org.wso2.carbon.api.analytics.alerts.core.internal.StreamMgtHelper;
+import org.wso2.carbon.databridge.commons.StreamDefinition;
 import org.wso2.carbon.event.builder.stub.types.EventBuilderConfigurationDto;
 import org.wso2.carbon.event.formatter.stub.types.EventFormatterConfigurationDto;
 import org.wso2.carbon.event.processor.stub.types.ExecutionPlanConfigurationDto;
@@ -37,13 +39,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AlertConfigurationService {
 
-    // todo read existing configs from cep.
     private static final Log log = LogFactory.getLog(AlertConfigurationService.class);
 
     public AlertConfigurationService() {
     }
 
     public boolean addAlertConfiguration(AlertConfiguration alertConfiguration, int tenantId) throws AlertConfigurationException {
+
+        if (alertConfiguration.getStreamDefinition() == null) {
+            StreamDefinition streamDefinition = StreamMgtHelper.getStreamDefinition(alertConfiguration.getInputStreamId());
+            alertConfiguration.setStreamDefinition(streamDefinition);
+        }
+
+        // todo check if alert config alerady exists ....
 
         EventBuilderConfigurationDto builderDto = AlertConfigurationHelper.getEventBuilderDto(alertConfiguration);
         ExecutionPlanConfigurationDto execPlanDto = AlertConfigurationHelper.getExecutionPlanDto(alertConfiguration);
@@ -54,6 +62,8 @@ public class AlertConfigurationService {
             // todo add wso2 event inputs and email outputs - currently their existance is assumed..
 
             AlertConfigurationClientFactory.getInstance().getEventBuilderAdminServiceClient().deployEventBuilderConfiguration(builderDto);
+            StreamMgtHelper.addRequiredStream(alertConfiguration.getStreamDefinition(), execPlanDto.getQueryExpressions());
+
             AlertConfigurationClientFactory.getInstance().getEventProcessorAdminServiceClient().addExecutionPlan(execPlanDto);
             AlertConfigurationClientFactory.getInstance().getEventFormatterAdminServiceClient().addEventFormatterConfiguration(formatterDto);
 
@@ -63,7 +73,7 @@ public class AlertConfigurationService {
             log.error("Error while saving alert configuration", e);
             return false;
         } catch (RemoteException e) {
-            log.error("Errow while configuring cep.", e);
+            log.error("Error while configuring cep.", e);
             return false;
         } catch (Exception e) {
             log.error("Error while configuring alerts.", e);
@@ -73,16 +83,22 @@ public class AlertConfigurationService {
     }
 
     public void removeAlertConfiguration(String configurationId, int tenantId) throws AlertConfigurationException {
-        // todo do this for inactive ones too
+        // todo do this for inactive ones too??
 
         try {
-            AlertConfigurationClientFactory.getInstance().getEventFormatterAdminServiceClient().removeActiveEventFormatterConfiguration(configurationId);
-            AlertConfigurationClientFactory.getInstance().getEventProcessorAdminServiceClient().removeActiveExecutionPlan(configurationId);
-            AlertConfigurationClientFactory.getInstance().getEventBuilderAdminServiceClient().removeActiveEventBuilderConfiguration(configurationId);
+            AlertConfigurationClientFactory.getInstance().getEventFormatterAdminServiceClient().removeEventFormatterConfiguration(configurationId);
+
+            AlertConfigurationClientFactory.getInstance().getEventProcessorAdminServiceClient().removeExecutionPlan(configurationId);
+            AlertConfigurationClientFactory.getInstance().getEventBuilderAdminServiceClient().removeEventBuilderConfiguration(configurationId);
+
+            // cleaning up output stream.
+            AlertConfiguration config = AlertConfigurationStore.getInstance().getAlertConfiguration(configurationId, tenantId);
+            String outputStream = AlertConfigurationHelper.getOutputStreamName(config);
+            AlertConfigurationClientFactory.getInstance().getEventStreamManagerAdminServiceClient().removeEventStream(outputStream, config.getStreamDefinition().getVersion());
+
             AlertConfigurationStore.getInstance().deleteAlertConfiguration(configurationId, tenantId);
         } catch (RegistryException e) {
             log.error("Error while removing the configurations.", e);
-            // todo throw or return false.
         } catch (RemoteException e) {
             log.error("Error while removing the configurations.", e);
         }

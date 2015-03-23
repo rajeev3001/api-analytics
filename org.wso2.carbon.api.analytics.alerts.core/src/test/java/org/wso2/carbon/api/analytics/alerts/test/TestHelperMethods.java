@@ -18,11 +18,22 @@
 
 package org.wso2.carbon.api.analytics.alerts.test;
 
+import org.apache.axis2.AxisFault;
+import org.apache.axis2.transport.http.HttpTransportProperties;
 import org.junit.Test;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
+import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
 import org.wso2.carbon.api.analytics.alerts.core.internal.AlertConfigurationHelper;
+import org.wso2.carbon.api.analytics.alerts.core.internal.clients.EventBuilderAdminServiceClient;
+import org.wso2.carbon.databridge.commons.AttributeType;
 import org.wso2.carbon.databridge.commons.StreamDefinition;
 import org.wso2.carbon.databridge.commons.exception.MalformedStreamDefinitionException;
+import org.wso2.carbon.event.builder.stub.EventBuilderAdminServiceStub;
+import org.wso2.carbon.event.builder.stub.types.EventBuilderConfigurationDto;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestHelperMethods {
 
@@ -33,6 +44,63 @@ public class TestHelperMethods {
         AlertConfiguration config = new AlertConfiguration();
         config.setStreamDefinition(streamDefinition);
         System.out.println(AlertConfigurationHelper.getOutputStreamName(config));
+    }
+
+
+//    @Test
+    public void testConfigs() throws RemoteException, MalformedStreamDefinitionException {
+//        EventBuilderAdminServiceClient client = new EventBuilderAdminServiceClient("https://10.100.0.121:9445/services/EventBuilderAdminService");
+//        client.setBasicAuthHeaders("admin", "admin");
+
+        String trustStore = "/Users/rajeevs/api-analytics/wso2am-1.8.0/repository/resources/security/" + "wso2carbon.jks";
+        System.setProperty("javax.net.ssl.trustStore", trustStore);
+        System.setProperty("javax.net.ssl.trustStorePassword", "wso2carbon");
+
+
+        AlertConfiguration config = new AlertConfiguration();
+        config.setConfigurationId("config11");
+        config.setOutputStream("testOut");
+        StreamDefinition sd = new StreamDefinition("response", "1.0.0");
+        sd.addPayloadData("name", AttributeType.STRING);
+        sd.addPayloadData("age", AttributeType.INT);
+        config.setStreamDefinition(sd);
+
+
+        AlertConfigurationCondition condition = new AlertConfigurationCondition();
+        condition.setAttribute("age");
+        condition.setTargetValue(11);
+        condition.setOperation(AlertConfigurationCondition.Operation.GREATER_THAN);
+
+        List<AlertConfigurationCondition> conditions = new ArrayList<AlertConfigurationCondition>();
+        conditions.add(condition);
+
+        config.setConditions(conditions);
+
+        EventBuilderConfigurationDto dto = AlertConfigurationHelper.getEventBuilderDto(config);
+
+
+        EventBuilderAdminServiceStub  stub = new EventBuilderAdminServiceStub("https://10.100.0.121:9445/services/EventBuilderAdminService");
+
+        HttpTransportProperties.Authenticator auth = new HttpTransportProperties.Authenticator();
+        auth.setUsername("admin");
+        auth.setPassword("admin");
+        auth.setPreemptiveAuthentication(true);
+
+        stub._getServiceClient().getOptions().setProperty(org.apache.axis2.transport.http.HTTPConstants.AUTHENTICATE, auth);
+        stub._getServiceClient().getOptions().setManageSession(true);
+
+        stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(10000);
+
+
+        stub.deployTextEventBuilderConfiguration(dto.getEventBuilderConfigName(), dto.getToStreamName() + ":" + dto.getToStreamVersion(),
+                dto.getInputEventAdaptorName(), dto.getInputEventAdaptorType(), null, null, dto.getCustomMappingEnabled());
+
+
+//        Object x =  stub.getAllActiveEventBuilderConfigurations();
+
+//        System.out.println(x);
+
+        System.out.println("done");
     }
 
 }

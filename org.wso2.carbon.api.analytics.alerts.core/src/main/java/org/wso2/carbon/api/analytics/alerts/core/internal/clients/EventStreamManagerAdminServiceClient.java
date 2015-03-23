@@ -21,10 +21,13 @@ package org.wso2.carbon.api.analytics.alerts.core.internal.clients;
 
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.ServiceClient;
+import org.apache.axis2.context.ConfigurationContext;
+import org.apache.axis2.context.ConfigurationContextFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.stream.manager.stub.EventStreamAdminServiceStub;
 import org.wso2.carbon.event.stream.manager.stub.types.EventStreamAttributeDto;
+import org.wso2.carbon.event.stream.manager.stub.types.EventStreamDefinitionDto;
 import org.wso2.carbon.event.stream.manager.stub.types.EventStreamInfoDto;
 
 import java.rmi.RemoteException;
@@ -35,34 +38,20 @@ public class EventStreamManagerAdminServiceClient {
     private EventStreamAdminServiceStub eventStreamAdminServiceStub;
     private String endPoint;
 
-    public EventStreamManagerAdminServiceClient(String backEndUrl, String sessionCookie) throws
-            AxisFault {
-        this.endPoint = backEndUrl + serviceName;
-        eventStreamAdminServiceStub = new EventStreamAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(sessionCookie, eventStreamAdminServiceStub);
-
-    }
 
     public EventStreamManagerAdminServiceClient(String backEndUrl, String userName, String password)
             throws AxisFault {
         this.endPoint = backEndUrl + serviceName;
-        eventStreamAdminServiceStub = new EventStreamAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(userName, password, eventStreamAdminServiceStub);
+        ConfigurationContext ctx = ConfigurationContextFactory.createConfigurationContextFromFileSystem(null, null);
+
+        eventStreamAdminServiceStub = new EventStreamAdminServiceStub(ctx, endPoint);
+        AuthenticationHelper.setBasicAuthHeaders(userName, password, eventStreamAdminServiceStub);
     }
 
-    public ServiceClient _getServiceClient() {
-        return eventStreamAdminServiceStub._getServiceClient();
-    }
-
-    public int getEventStreamCount()
+    public EventStreamInfoDto[] getEventStreams()
             throws RemoteException {
         try {
-            EventStreamInfoDto[] streamInfoDtos = eventStreamAdminServiceStub.getAllEventStreamInfoDto();
-            if (streamInfoDtos == null) {
-                return 0;
-            } else {
-                return streamInfoDtos.length;
-            }
+            return eventStreamAdminServiceStub.getAllEventStreamInfoDto();
         } catch (RemoteException e) {
             throw new RemoteException("RemoteException", e);
         }
@@ -99,6 +88,17 @@ public class EventStreamManagerAdminServiceClient {
             throw new RemoteException();
         }
     }
+
+    public EventStreamDefinitionDto getStreamDefinitionDto(String streamId)
+            throws RemoteException {
+        try {
+            return eventStreamAdminServiceStub.getStreamDefinitionDto(streamId);
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw new RemoteException();
+        }
+    }
+
 
     public String[] getStreamNames()
             throws RemoteException {

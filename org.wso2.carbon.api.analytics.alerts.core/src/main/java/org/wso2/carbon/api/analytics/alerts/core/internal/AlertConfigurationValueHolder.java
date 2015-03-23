@@ -18,12 +18,15 @@
 
 package org.wso2.carbon.api.analytics.alerts.core.internal;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class AlertConfigurationValueHolder {
 
     private String inputEventAdaptorName;
     private String inputEventAdaptorType;
+
+    private String inputMappingType;
 
     private String outputEventAdaptorName;
     private String outputEventAdaptorType;
@@ -40,6 +43,17 @@ public class AlertConfigurationValueHolder {
 
     private AlertConfigurationValueHolder() {
         // todo read configs from file.
+        inputEventAdaptorName = "DefaultWSO2EventInputAdaptor";
+        inputEventAdaptorType = "wso2event";
+
+        outputEventAdaptorName = "emailOut";
+        outputEventAdaptorType = "email";
+
+        inputMappingType = "wso2event";
+
+        outputAdaptorProperties = new HashMap<String, String>();
+        outputAdaptorProperties.put("email.address", "demo.qsp@gmail.com");
+        outputAdaptorProperties.put("email.subject", "api analytics alerts");
     }
 
 
@@ -64,4 +78,7 @@ public class AlertConfigurationValueHolder {
         return outputEventAdaptorType;
     }
 
+    public String getInputMappingType() {
+        return inputMappingType;
+    }
 }

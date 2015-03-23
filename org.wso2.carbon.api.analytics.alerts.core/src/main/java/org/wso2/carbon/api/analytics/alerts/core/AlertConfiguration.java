@@ -30,6 +30,7 @@ public class AlertConfiguration {
 
     private List<AlertConfigurationCondition> conditions;
     private StreamDefinition streamDefinition;
+    private String inputStreamId;
 
     // todo infer these from input and conditions
     private Map<String, String> outputAttributes;
@@ -84,4 +85,11 @@ public class AlertConfiguration {
         this.outputAttributes = outputAttributes;
     }
 
+    public String getInputStreamId() {
+        return inputStreamId;
+    }
+
+    public void setInputStreamId(String inputStreamId) {
+        this.inputStreamId = inputStreamId;
+    }
 }

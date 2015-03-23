@@ -41,18 +41,23 @@
             </parameter>
         </operation>
 
-    <operation name="removeAlertConfiguration">
-        <parameter name="AuthorizationAction" locked="true">
-            /permission/admin/manage/api-analytics
-        </parameter>
-    </operation>
+        <operation name="removeAlertConfiguration">
+            <parameter name="AuthorizationAction" locked="true">
+                /permission/admin/manage/api-analytics
+            </parameter>
+        </operation>
 
-    <operation name="getAllAlertConfigurations">
-        <parameter name="AuthorizationAction" locked="true">
-            /permission/admin/manage/api-analytics
-        </parameter>
-    </operation>
+        <operation name="getAllAlertConfigurations">
+            <parameter name="AuthorizationAction" locked="true">
+                /permission/admin/manage/api-analytics
+            </parameter>
+        </operation>
 
+        <operation name="getAlertConfiguration">
+            <parameter name="AuthorizationAction" locked="true">
+                /permission/admin/manage/api-analytics
+            </parameter>
+        </operation>
 
     </service>
     <parameter name="adminService" locked="true">true</parameter>

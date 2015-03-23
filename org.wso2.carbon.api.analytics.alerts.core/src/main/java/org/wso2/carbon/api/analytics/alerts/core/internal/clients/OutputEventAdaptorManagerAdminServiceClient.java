@@ -41,7 +41,7 @@ public class OutputEventAdaptorManagerAdminServiceClient {
             throws AxisFault {
         this.endPoint = backEndUrl + serviceName;
         outputEventAdaptorManagerAdminServiceStub = new OutputEventAdaptorManagerAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(sessionCookie, outputEventAdaptorManagerAdminServiceStub);
+        AuthenticationHelper.authenticateStub(sessionCookie, outputEventAdaptorManagerAdminServiceStub);
 
     }
 
@@ -49,7 +49,7 @@ public class OutputEventAdaptorManagerAdminServiceClient {
             throws AxisFault {
         this.endPoint = backEndUrl + serviceName;
         outputEventAdaptorManagerAdminServiceStub = new OutputEventAdaptorManagerAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(userName, password, outputEventAdaptorManagerAdminServiceStub);
+        AuthenticationHelper.setBasicAuthHeaders(userName, password, outputEventAdaptorManagerAdminServiceStub);
 
     }
 

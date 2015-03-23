@@ -23,7 +23,7 @@ public class AlertConfigurationDto {
 
     private AlertConfigurationConditionDto[] conditions;
 
-    private String streamDefinition;
+    private String attributeDefinitions;
     private String configurationId;
     private String inputStreamId;
     private String outputMapping;
@@ -53,12 +53,12 @@ public class AlertConfigurationDto {
         this.conditions = conditions;
     }
 
-    public String getStreamDefinition() {
-        return streamDefinition;
+    public String getAttributeDefinitions() {
+        return attributeDefinitions;
     }
 
-    public void setStreamDefinition(String streamDefinition) {
-        this.streamDefinition = streamDefinition;
+    public void setAttributeDefinitions(String attributeDefinitions) {
+        this.attributeDefinitions = attributeDefinitions;
     }
 
     public String getInputStreamId() {

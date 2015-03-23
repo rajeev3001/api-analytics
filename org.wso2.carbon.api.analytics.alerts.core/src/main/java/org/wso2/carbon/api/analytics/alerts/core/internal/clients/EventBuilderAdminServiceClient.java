@@ -21,96 +21,62 @@ package org.wso2.carbon.api.analytics.alerts.core.internal.clients;
 
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.ServiceClient;
+import org.apache.axis2.context.ConfigurationContext;
+import org.apache.axis2.context.ConfigurationContextFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.builder.stub.EventBuilderAdminServiceStub;
 import org.wso2.carbon.event.builder.stub.types.*;
+import org.wso2.carbon.event.builder.stub.types.PropertyDto;
+import org.wso2.carbon.event.formatter.stub.types.*;
 
 import java.rmi.RemoteException;
 
 public class EventBuilderAdminServiceClient {
+
     private static final Log log = LogFactory.getLog(EventBuilderAdminServiceClient.class);
     private final String serviceName = "EventBuilderAdminService";
     private EventBuilderAdminServiceStub eventBuilderAdminServiceStub;
     private String endPoint;
 
-    public EventBuilderAdminServiceClient(String backEndUrl, String sessionCookie) throws
-            AxisFault {
-        this.endPoint = backEndUrl + serviceName;
-        eventBuilderAdminServiceStub = new EventBuilderAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(sessionCookie, eventBuilderAdminServiceStub);
 
-    }
-
-    public EventBuilderAdminServiceClient(String backEndUrl, String userName, String password)
+    public EventBuilderAdminServiceClient(String backEndUrl, String username, String password)
             throws AxisFault {
         this.endPoint = backEndUrl + serviceName;
-        eventBuilderAdminServiceStub = new EventBuilderAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(userName, password, eventBuilderAdminServiceStub);
-    }
+        ConfigurationContext ctx = ConfigurationContextFactory.createConfigurationContextFromFileSystem(null, null);
 
-    public ServiceClient _getServiceClient() {
-        return eventBuilderAdminServiceStub._getServiceClient();
+        eventBuilderAdminServiceStub = new EventBuilderAdminServiceStub(ctx, endPoint);
+        AuthenticationHelper.setBasicAuthHeaders(username, password, eventBuilderAdminServiceStub);
+
     }
 
     public void deployEventBuilderConfiguration(EventBuilderConfigurationDto dto) throws RemoteException {
-        eventBuilderAdminServiceStub.deployTextEventBuilderConfiguration(dto.getEventBuilderConfigName(), dto.getToStreamName() + ":" + dto.getToStreamVersion(),
-                dto.getInputEventAdaptorName(), dto.getInputEventAdaptorType(), null, null, dto.getCustomMappingEnabled());
+
+        try {
+            org.wso2.carbon.event.builder.stub.types.PropertyDto[] propDtos = new org.wso2.carbon.event.builder.stub.types.PropertyDto[dto.getEventBuilderMessageProperties().length];
+            int i = 0;
+            for (EventBuilderMessagePropertyDto msgDto : dto.getEventBuilderMessageProperties()) {
+                propDtos[i] = new org.wso2.carbon.event.builder.stub.types.PropertyDto();
+                propDtos[i].setKey(msgDto.getKey());
+                propDtos[i].setValue(msgDto.getValue());
+                i++;
+            }
+            eventBuilderAdminServiceStub.deployWso2EventBuilderConfiguration(dto.getEventBuilderConfigName(), dto.getToStreamName() + ":" + dto.getToStreamVersion(),
+                    dto.getInputEventAdaptorName(), dto.getInputEventAdaptorType(), null, null, null, propDtos, dto.getCustomMappingEnabled());
+        } catch (Exception e) {
+            log.error("exc in builder config", e);
+        }
     }
 
-    public int getActiveEventBuilderCount()
+
+    public EventBuilderConfigurationInfoDto[] getActiveEventBuilders()
             throws RemoteException {
         try {
-            EventBuilderConfigurationInfoDto[] configs = eventBuilderAdminServiceStub.getAllActiveEventBuilderConfigurations();
-            if (configs == null) {
-                return 0;
-            } else {
-                return configs.length;
-            }
+            return eventBuilderAdminServiceStub.getAllActiveEventBuilderConfigurations();
         } catch (RemoteException e) {
             throw new RemoteException("RemoteException", e);
         }
 
-    }
-
-
-    public void addWso2EventBuilderConfiguration(String eventBuilderName, String streamId, String transportAdaptorName, String transportAdaptorType,
-                                                 EventInputPropertyConfigurationDto[] metaData, EventInputPropertyConfigurationDto[] correlationData,
-                                                 EventInputPropertyConfigurationDto[] payloadData, PropertyDto[] eventBuilderPropertyDtos, boolean mappingEnabled)
-            throws RemoteException {
-        try {
-            eventBuilderAdminServiceStub.deployWso2EventBuilderConfiguration(eventBuilderName, streamId, transportAdaptorName, transportAdaptorType, metaData, correlationData, payloadData, eventBuilderPropertyDtos, mappingEnabled);
-        } catch (RemoteException e) {
-            log.error("RemoteException", e);
-            throw new RemoteException();
-        }
-    }
-
-    public void addXmlEventBuilderConfiguration(String eventBuilderName,
-                                                String streamNameWithVersion,
-                                                String transportAdaptorName,
-                                                String transportAdaptorType,
-                                                EventInputPropertyConfigurationDto[] xpathExpressions,
-                                                PropertyDto[] inputPropertyConfiguration,
-                                                PropertyDto[] xpathDefinitions,
-                                                String parentSelectorXpath, boolean mappingEnabled)
-            throws RemoteException {
-        try {
-            eventBuilderAdminServiceStub.deployXmlEventBuilderConfiguration(eventBuilderName, streamNameWithVersion, transportAdaptorName, transportAdaptorType, xpathExpressions, inputPropertyConfiguration, xpathDefinitions, parentSelectorXpath, mappingEnabled);
-        } catch (RemoteException e) {
-            log.error("RemoteException", e);
-            throw new RemoteException();
-        }
-    }
-
-    public void addEventBuilderConfiguration(String eventBuilderConfigurationXml)
-            throws RemoteException {
-        try {
-            eventBuilderAdminServiceStub.deployEventBuilderConfiguration(eventBuilderConfigurationXml);
-        } catch (RemoteException e) {
-            log.error("RemoteException", e);
-            throw new RemoteException();
-        }
     }
 
     public void removeActiveEventBuilderConfiguration(String eventBuilderName)
@@ -130,6 +96,15 @@ public class EventBuilderAdminServiceClient {
         } catch (RemoteException e) {
             log.error("RemoteException", e);
             throw new RemoteException();
+        }
+    }
+
+    public void removeEventBuilderConfiguration(String builderName) throws RemoteException {
+        try {
+            removeActiveEventBuilderConfiguration(builderName);
+        } catch (RemoteException e) {
+            log.error(e.getMessage());
+            removeInactiveEventBuilderConfiguration(builderName + ".xml");
         }
     }
 

@@ -21,6 +21,8 @@ package org.wso2.carbon.api.analytics.alerts.core.internal.clients;
 
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.ServiceClient;
+import org.apache.axis2.context.ConfigurationContext;
+import org.apache.axis2.context.ConfigurationContextFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.formatter.stub.EventFormatterAdminServiceStub;
@@ -29,53 +31,25 @@ import org.wso2.carbon.event.formatter.stub.types.*;
 import java.rmi.RemoteException;
 
 public class EventFormatterAdminServiceClient {
+
     private static final Log log = LogFactory.getLog(EventFormatterAdminServiceClient.class);
     private final String serviceName = "EventFormatterAdminService";
     private EventFormatterAdminServiceStub eventFormatterAdminServiceStub;
     private String endPoint;
 
-    public EventFormatterAdminServiceClient(String backEndUrl, String sessionCookie) throws
-            AxisFault {
-        this.endPoint = backEndUrl + serviceName;
-        eventFormatterAdminServiceStub = new EventFormatterAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(sessionCookie, eventFormatterAdminServiceStub);
-
-    }
-
-    public EventFormatterAdminServiceClient(String backEndUrl, String userName, String password)
+    public EventFormatterAdminServiceClient(String backEndUrl, String username, String password)
             throws AxisFault {
         this.endPoint = backEndUrl + serviceName;
-        eventFormatterAdminServiceStub = new EventFormatterAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(userName, password, eventFormatterAdminServiceStub);
+        ConfigurationContext ctx = ConfigurationContextFactory.createConfigurationContextFromFileSystem(null, null);
+        eventFormatterAdminServiceStub = new EventFormatterAdminServiceStub(ctx, endPoint);
+        AuthenticationHelper.setBasicAuthHeaders(username, password, eventFormatterAdminServiceStub);
+
     }
 
-    public ServiceClient _getServiceClient() {
-        return eventFormatterAdminServiceStub._getServiceClient();
-    }
-
-    public int getActiveEventFormatterCount()
+    public EventFormatterConfigurationInfoDto[] getActiveEventFormatters()
             throws RemoteException {
         try {
-            EventFormatterConfigurationInfoDto[] configs = eventFormatterAdminServiceStub.getAllActiveEventFormatterConfiguration();
-            if (configs == null) {
-                return 0;
-            } else {
-                return configs.length;
-            }
-        } catch (RemoteException e) {
-            throw new RemoteException("RemoteException", e);
-        }
-    }
-
-    public int getEventFormatterCount()
-            throws RemoteException {
-        try {
-            EventFormatterConfigurationFileDto[] configs = eventFormatterAdminServiceStub.getAllInactiveEventFormatterConfiguration();
-            if (configs == null) {
-                return getActiveEventFormatterCount();
-            } else {
-                return configs.length + getActiveEventFormatterCount();
-            }
+            return eventFormatterAdminServiceStub.getAllActiveEventFormatterConfiguration();
         } catch (RemoteException e) {
             throw new RemoteException("RemoteException", e);
         }
@@ -94,30 +68,6 @@ public class EventFormatterAdminServiceClient {
         }
     }
 
-    public void addXMLEventFormatterConfiguration(String eventFormatterName,
-                                                  String streamNameWithVersion,
-                                                  String transportAdaptorName,
-                                                  String transportAdaptorType,
-                                                  String textData,
-                                                  PropertyDto[] outputPropertyConfiguration,
-                                                  String dataFrom, boolean mappingEnabled)
-            throws RemoteException {
-        try {
-            eventFormatterAdminServiceStub.deployXmlEventFormatterConfiguration(eventFormatterName, streamNameWithVersion, transportAdaptorName, transportAdaptorType, textData, outputPropertyConfiguration, dataFrom, mappingEnabled);
-        } catch (RemoteException e) {
-            log.error("RemoteException", e);
-            throw new RemoteException();
-        }
-    }
-
-    public void addEventFormatterConfiguration(String eventFormatterConfigXml) throws RemoteException {
-        try {
-            eventFormatterAdminServiceStub.deployEventFormatterConfiguration(eventFormatterConfigXml);
-        } catch (RemoteException e) {
-            log.error("RemoteException", e);
-            throw new RemoteException();
-        }
-    }
 
     public void removeActiveEventFormatterConfiguration(String eventFormatterName)
             throws RemoteException {
@@ -136,6 +86,15 @@ public class EventFormatterAdminServiceClient {
         } catch (RemoteException e) {
             log.error("RemoteException", e);
             throw new RemoteException();
+        }
+    }
+
+    public void removeEventFormatterConfiguration(String formatterName) throws RemoteException {
+        try {
+            removeActiveEventFormatterConfiguration(formatterName);
+        } catch (RemoteException e) {
+            log.error(e.getMessage());
+            removeInactiveEventFormatterConfiguration(formatterName + ".xml");
         }
     }
 
@@ -171,6 +130,6 @@ public class EventFormatterAdminServiceClient {
 
         eventFormatterAdminServiceStub.deployTextEventFormatterConfiguration(dto.getEventFormatterName(), dto.getFromStreamNameWithVersion(),
                 dto.getToPropertyConfigurationDto().getEventAdaptorName(), dto.getToPropertyConfigurationDto().getEventAdaptorType(),
-                dto.getTextOutputMappingDto().getMappingText(), stubDtos, "true", true);
+                dto.getTextOutputMappingDto().getMappingText(), stubDtos, "inline", true);
     }
 }

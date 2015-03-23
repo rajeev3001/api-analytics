@@ -19,24 +19,15 @@ import org.apache.axis2.addressing.EndpointReference;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.client.ServiceClient;
 import org.apache.axis2.client.Stub;
+import org.apache.axis2.transport.http.HttpTransportProperties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.utils.CarbonUtils;
 
-/**
- * This class authenticate stubs with valid session cookie
- */
-public class AuthenticateStub {
-    private static final Log log = LogFactory.getLog(AuthenticateStub.class);
+public class AuthenticationHelper {
+    private static final Log log = LogFactory.getLog(AuthenticationHelper.class);
 
-    /**
-     * Stub authentication method
-     *
-     * @param stub          valid stub
-     * @param sessionCookie session cookie
-     */
     public static void authenticateStub(String sessionCookie, Stub stub) {
-        long soTimeout = 5 * 60 * 1000; // Five minutes
+        long soTimeout = 5 * 60 * 1000;
 
         ServiceClient client = stub._getServiceClient();
         Options option = client.getOptions();
@@ -49,8 +40,7 @@ public class AuthenticateStub {
     }
 
     public static Stub authenticateStub(Stub stub, String sessionCookie, String backendURL) {
-        long soTimeout = 5 * 60 * 1000; // Three minutes
-
+        long soTimeout = 5 * 60 * 1000;
         ServiceClient client = stub._getServiceClient();
         Options option = client.getOptions();
         option.setManageSession(true);
@@ -66,13 +56,16 @@ public class AuthenticateStub {
         return stub;
     }
 
-    /**
-     * Authenticate the given web service stub against the Product user manager. This
-     * will make it possible to use the stub for invoking Product admin services.
-     *
-     * @param stub Axis2 service stub which needs to be authenticated
-     */
-    public static void authenticateStub(String userName, String password, Stub stub) {
-        CarbonUtils.setBasicAccessSecurityHeaders(userName, password, stub._getServiceClient());
+    public static void setBasicAuthHeaders(String userName, String password, Stub stub) {
+
+        HttpTransportProperties.Authenticator auth = new HttpTransportProperties.Authenticator();
+        auth.setUsername(userName);
+        auth.setPassword(password);
+        auth.setPreemptiveAuthentication(true);
+        auth.setAllowedRetry(true);
+
+        stub._getServiceClient().getOptions().setProperty(org.apache.axis2.transport.http.HTTPConstants.AUTHENTICATE, auth);
+        stub._getServiceClient().getOptions().setManageSession(true);
+        stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(10000);
     }
 }

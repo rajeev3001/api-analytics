@@ -22,4 +22,5 @@ public class AlertConfigurationConstants {
 
     public static final String CONFIG_PREFIX = "ac_";
     public static final String REGISTRY_PATH = "/APIAlertConfigurations";
+    public static final String SIDDHI_INPUT_STREAM_SUFFIX = "_in";
 }

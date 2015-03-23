@@ -19,6 +19,8 @@
 package org.wso2.carbon.api.analytics.alerts.admin;
 
 import org.apache.axis2.AxisFault;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.api.analytics.alerts.admin.internal.ds.AlertConfigurationAdminValueHolder;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
@@ -34,6 +36,8 @@ import java.util.List;
 
 public class AlertConfigurationAdminService extends AbstractAdmin {
 
+    private static final Log log = LogFactory.getLog(AlertConfigurationAdminService.class);
+
 
     public void addAlertConfiguration(AlertConfigurationDto configDto) throws AxisFault {
         AlertConfiguration alertConfig = new AlertConfiguration();
@@ -45,45 +49,50 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
                 AlertConfigurationCondition condition = new AlertConfigurationCondition();
                 condition.setAttribute(conditionDto.getAttributeName());
                 condition.setTargetValue(conditionDto.getAttributeValue());
-                if (conditionDto.getOperation().equals(AlertConfigurationCondition.Operation.LESS_THAN.symbol())) {
+                if (conditionDto.getOperation().equalsIgnoreCase(AlertConfigurationCondition.Operation.LESS_THAN.toString())) {
                     condition.setOperation(AlertConfigurationCondition.Operation.LESS_THAN);
-                } else if (conditionDto.getOperation().equals(AlertConfigurationCondition.Operation.GREATER_THAN.symbol())) {
+                } else if (conditionDto.getOperation().equalsIgnoreCase(AlertConfigurationCondition.Operation.GREATER_THAN.toString())) {
                     condition.setOperation(AlertConfigurationCondition.Operation.GREATER_THAN);
-                } else if (conditionDto.getOperation().equals(AlertConfigurationCondition.Operation.EQUALS.symbol())) {
+                } else if (conditionDto.getOperation().equalsIgnoreCase(AlertConfigurationCondition.Operation.EQUALS.toString())) {
                     condition.setOperation(AlertConfigurationCondition.Operation.EQUALS);
                 }
                 conditions.add(condition);
             }
         } else {
-            // todo throw exception?
+            throw new AxisFault("Configurations with no conditions are not allowed.");
         }
         alertConfig.setConditions(conditions);
         alertConfig.setOutputMapping(configDto.getOutputMapping());
-        StreamDefinition streamDefinition = new StreamDefinition(configDto.getInputStreamId());
-        String[] attributes = configDto.getStreamDefinition().split(",");
 
-        for (String attribute : attributes) {
-            String[] nameType = attribute.trim().split(" ");
-            if (nameType[1].equals("int")) {
-                streamDefinition.addPayloadData(nameType[0], AttributeType.INT);
-            } else if (nameType[1].equals("float")) {
-                streamDefinition.addPayloadData(nameType[0], AttributeType.FLOAT);
-            } else if (nameType[1].equals("long")) {
-                streamDefinition.addPayloadData(nameType[0], AttributeType.LONG);
-            } else if (nameType[1].equals("double")) {
-                streamDefinition.addPayloadData(nameType[0], AttributeType.DOUBLE);
-            } else if (nameType[1].equals("boolean")) {
-                streamDefinition.addPayloadData(nameType[0], AttributeType.BOOL);
-            } else if (nameType[1].equals("string")) {
-                streamDefinition.addPayloadData(nameType[0], AttributeType.STRING);
+        alertConfig.setInputStreamId(configDto.getInputStreamId());
+
+        if (configDto.getAttributeDefinitions() != null && configDto.getAttributeDefinitions().length() > 0) {
+            StreamDefinition streamDefinition = new StreamDefinition(configDto.getInputStreamId());
+            String[] attributes = configDto.getAttributeDefinitions().split(",");
+
+            for (String attribute : attributes) {
+                String[] nameType = attribute.trim().split(" ");
+                if (nameType[1].equals("int")) {
+                    streamDefinition.addPayloadData(nameType[0], AttributeType.INT);
+                } else if (nameType[1].equals("float")) {
+                    streamDefinition.addPayloadData(nameType[0], AttributeType.FLOAT);
+                } else if (nameType[1].equals("long")) {
+                    streamDefinition.addPayloadData(nameType[0], AttributeType.LONG);
+                } else if (nameType[1].equals("double")) {
+                    streamDefinition.addPayloadData(nameType[0], AttributeType.DOUBLE);
+                } else if (nameType[1].equals("boolean")) {
+                    streamDefinition.addPayloadData(nameType[0], AttributeType.BOOL);
+                } else if (nameType[1].equals("string")) {
+                    streamDefinition.addPayloadData(nameType[0], AttributeType.STRING);
+                }
             }
-        }
 
-        alertConfig.setStreamDefinition(streamDefinition);
+            alertConfig.setStreamDefinition(streamDefinition);
+        }
         try {
             AlertConfigurationAdminValueHolder.getAlertConfigurationService().addAlertConfiguration(alertConfig, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
         } catch (AlertConfigurationException e) {
-            // todo log
+            log.error("Error adding alert configuration: " + alertConfig.getConfigurationId(), e);
             throw new AxisFault("Error while deploying the alert configuration.", e);
         }
 
@@ -93,54 +102,73 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
         try {
             AlertConfigurationAdminValueHolder.getAlertConfigurationService().removeAlertConfiguration(configurationId, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
         } catch (AlertConfigurationException e) {
-            // todo log
+            log.error("Error removing alert configuration: " + configurationId, e);
             throw new AxisFault("Error while undeploying the alert configuration.", e);
         }
     }
 
     public AlertConfigurationDto[] getAllAlertConfigurations() throws AxisFault {
-        List<AlertConfiguration> allConfigs = AlertConfigurationAdminValueHolder.getAlertConfigurationService().getAllAlertConfigurations(PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        List<AlertConfiguration> allConfigs = AlertConfigurationAdminValueHolder.getAlertConfigurationService().getAllAlertConfigurations(tenantId);
         AlertConfigurationDto[] allDtos = new AlertConfigurationDto[allConfigs.size()];
         if (allConfigs.size() > 0) {
 
             for (int i = 0; i < allConfigs.size(); i++) {
                 AlertConfiguration config = allConfigs.get(i);
-
-                allDtos[i] = new AlertConfigurationDto();
-
-                allDtos[i].setConfigurationId(config.getConfigurationId());
-                allDtos[i].setInputStreamId(config.getStreamDefinition().getStreamId());
-
-                StringBuilder streamDef = new StringBuilder("");
-                boolean appendComma = false;
-                for (Attribute at : config.getStreamDefinition().getPayloadData()) {
-                    if (appendComma) {
-                        streamDef.append(",");
-                    }
-                    streamDef.append(at.getName());
-                    streamDef.append(" ");
-                    streamDef.append(at.getType().toString().toLowerCase());
-                    appendComma = true;
-                }
-
-                allDtos[i].setStreamDefinition(streamDef.toString());
-                AlertConfigurationConditionDto[] conditionDtos = new AlertConfigurationConditionDto[config.getConditions().size()];
-
-                int j = 0;
-                for (AlertConfigurationCondition condition : config.getConditions()) {
-                    AlertConfigurationConditionDto conditionDto = new AlertConfigurationConditionDto();
-                    conditionDto.setAttributeName(condition.getAttribute());
-                    conditionDto.setAttributeValue(condition.getTargetValue().toString());
-                    conditionDto.setOperation(condition.getOperation().symbol());
-                    conditionDtos[j] = conditionDto;
-                    j++;
-                }
-                allDtos[i].setConditions(conditionDtos);
-                allDtos[i].setOutputMapping(config.getOutputMapping());
-                i++;
+                allDtos[i] = convertToDto(config);
             }
         }
         return allDtos;
     }
+
+    public AlertConfigurationDto getAlertConfiguration(String configurationId) throws AxisFault {
+        int tenantId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+        try {
+            AlertConfiguration config = AlertConfigurationAdminValueHolder.getAlertConfigurationService().getAlertConfiguration(configurationId, tenantId);
+            return convertToDto(config);
+        } catch (AlertConfigurationException e) {
+            log.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+
+    private AlertConfigurationDto convertToDto(AlertConfiguration config) {
+
+        AlertConfigurationDto configDto = new AlertConfigurationDto();
+
+        configDto.setConfigurationId(config.getConfigurationId());
+        configDto.setInputStreamId(config.getStreamDefinition().getStreamId());
+
+        StringBuilder streamDef = new StringBuilder("");
+        boolean appendComma = false;
+        for (Attribute at : config.getStreamDefinition().getPayloadData()) {
+            if (appendComma) {
+                streamDef.append(",");
+            }
+            streamDef.append(at.getName());
+            streamDef.append(" ");
+            streamDef.append(at.getType().toString().toLowerCase());
+            appendComma = true;
+        }
+
+        configDto.setAttributeDefinitions(streamDef.toString());
+        AlertConfigurationConditionDto[] conditionDtos = new AlertConfigurationConditionDto[config.getConditions().size()];
+
+        int j = 0;
+        for (AlertConfigurationCondition condition : config.getConditions()) {
+            AlertConfigurationConditionDto conditionDto = new AlertConfigurationConditionDto();
+            conditionDto.setAttributeName(condition.getAttribute());
+            conditionDto.setAttributeValue(condition.getTargetValue().toString());
+            conditionDto.setOperation(condition.getOperation().symbol());
+            conditionDtos[j] = conditionDto;
+            j++;
+        }
+        configDto.setConditions(conditionDtos);
+        configDto.setOutputMapping(config.getOutputMapping());
+
+        return configDto;
+    }
+
 
 }

@@ -18,10 +18,24 @@
 
 package org.wso2.carbon.api.analytics.alerts.core.internal.ds;
 
+import org.osgi.service.component.ComponentContext;
+import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationService;
 import org.wso2.carbon.registry.core.exceptions.RegistryException;
 import org.wso2.carbon.registry.core.service.RegistryService;
 
+/**
+ * @scr.component name="alertConfigurationService.component" immediate="true"
+ * @scr.reference name="registry.service" interface="org.wso2.carbon.registry.core.service.RegistryService"
+ * cardinality="1..1" policy="dynamic" bind="setRegistryService" unbind="unsetRegistryService"
+ */
+
 public class AlertConfigurationDS {
+
+    protected void activate(ComponentContext context) {
+        context.getBundleContext().registerService(AlertConfigurationService.class.getName(), new AlertConfigurationService(), null);
+
+    }
+
 
     protected void setRegistryService(RegistryService registryService) throws RegistryException {
         ServiceHolder.setRegistryService(registryService);

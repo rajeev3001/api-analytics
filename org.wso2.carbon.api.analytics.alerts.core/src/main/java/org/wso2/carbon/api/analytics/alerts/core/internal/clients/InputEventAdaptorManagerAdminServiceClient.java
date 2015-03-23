@@ -41,7 +41,7 @@ public class InputEventAdaptorManagerAdminServiceClient {
             throws AxisFault {
         this.endPoint = backEndUrl + serviceName;
         inputEventAdaptorManagerAdminServiceStub = new InputEventAdaptorManagerAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(sessionCookie, inputEventAdaptorManagerAdminServiceStub);
+        AuthenticationHelper.authenticateStub(sessionCookie, inputEventAdaptorManagerAdminServiceStub);
 
     }
 
@@ -49,13 +49,10 @@ public class InputEventAdaptorManagerAdminServiceClient {
             throws AxisFault {
         this.endPoint = backEndUrl + serviceName;
         inputEventAdaptorManagerAdminServiceStub = new InputEventAdaptorManagerAdminServiceStub(endPoint);
-        AuthenticateStub.authenticateStub(userName, password, inputEventAdaptorManagerAdminServiceStub);
+        AuthenticationHelper.setBasicAuthHeaders(userName, password, inputEventAdaptorManagerAdminServiceStub);
 
     }
 
-    public ServiceClient _getServiceClient() {
-        return inputEventAdaptorManagerAdminServiceStub._getServiceClient();
-    }
 
     public String[] getAllInputEventAdaptorNames() throws RemoteException {
         String[] InputEventAdaptorNames = null;

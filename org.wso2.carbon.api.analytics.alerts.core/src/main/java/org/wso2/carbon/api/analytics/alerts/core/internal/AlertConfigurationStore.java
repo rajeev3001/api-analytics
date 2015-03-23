@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AlertConfigurationStore {
 
-    // caching.
+    // todo caching.
     private ConcurrentHashMap<Integer, ConcurrentHashMap<String, AlertConfiguration>> tenantSpecificConfigurations;
     private static AlertConfigurationStore instance;
 
