@@ -23,6 +23,7 @@ import org.apache.axis2.transport.http.HttpTransportProperties;
 import org.junit.Test;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
+import org.wso2.carbon.api.analytics.alerts.core.DerivedAttribute;
 import org.wso2.carbon.api.analytics.alerts.core.internal.AlertConfigurationHelper;
 import org.wso2.carbon.api.analytics.alerts.core.internal.clients.EventBuilderAdminServiceClient;
 import org.wso2.carbon.databridge.commons.AttributeType;
@@ -47,7 +48,7 @@ public class TestHelperMethods {
     }
 
 
-//    @Test
+    @Test
     public void testConfigs() throws RemoteException, MalformedStreamDefinitionException {
 //        EventBuilderAdminServiceClient client = new EventBuilderAdminServiceClient("https://10.100.0.121:9445/services/EventBuilderAdminService");
 //        client.setBasicAuthHeaders("admin", "admin");
@@ -76,30 +77,23 @@ public class TestHelperMethods {
 
         config.setConditions(conditions);
 
-        EventBuilderConfigurationDto dto = AlertConfigurationHelper.getEventBuilderDto(config);
+        DerivedAttribute da = new DerivedAttribute();
+        da.setSelectExpressions("age");
+        da.setAggregationLength(11);
+        da.setAggregationType("length");
+        da.setGroupByAttributes("name");
 
+        List<DerivedAttribute> daList = new ArrayList<DerivedAttribute>(1);
+        daList.add(da);
 
-        EventBuilderAdminServiceStub  stub = new EventBuilderAdminServiceStub("https://10.100.0.121:9445/services/EventBuilderAdminService");
+//        config.setDerivedAttributes(daList);
 
-        HttpTransportProperties.Authenticator auth = new HttpTransportProperties.Authenticator();
-        auth.setUsername("admin");
-        auth.setPassword("admin");
-        auth.setPreemptiveAuthentication(true);
-
-        stub._getServiceClient().getOptions().setProperty(org.apache.axis2.transport.http.HTTPConstants.AUTHENTICATE, auth);
-        stub._getServiceClient().getOptions().setManageSession(true);
-
-        stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(10000);
-
-
-        stub.deployTextEventBuilderConfiguration(dto.getEventBuilderConfigName(), dto.getToStreamName() + ":" + dto.getToStreamVersion(),
-                dto.getInputEventAdaptorName(), dto.getInputEventAdaptorType(), null, null, dto.getCustomMappingEnabled());
-
-
+String query = AlertConfigurationHelper.generateSiddhiQueries(config);
 //        Object x =  stub.getAllActiveEventBuilderConfigurations();
 
 //        System.out.println(x);
 
+        System.out.println(query);
         System.out.println("done");
     }
 

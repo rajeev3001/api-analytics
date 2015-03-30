@@ -19,9 +19,12 @@
 
 package org.wso2.carbon.api.analytics.alerts.admin;
 
+import org.wso2.carbon.api.analytics.alerts.core.DerivedAttribute;
+
 public class AlertConfigurationDto {
 
     private AlertConfigurationConditionDto[] conditions;
+    private DerivedAttributeDto[] derivedAttributes;
 
     private String attributeDefinitions;
     private String configurationId;
@@ -59,6 +62,14 @@ public class AlertConfigurationDto {
 
     public void setAttributeDefinitions(String attributeDefinitions) {
         this.attributeDefinitions = attributeDefinitions;
+    }
+
+    public DerivedAttributeDto[] getDerivedAttributes() {
+        return derivedAttributes;
+    }
+
+    public void setDerivedAttributes(DerivedAttributeDto[] derivedAttributes) {
+        this.derivedAttributes = derivedAttributes;
     }
 
     public String getInputStreamId() {

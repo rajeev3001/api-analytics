@@ -20,6 +20,7 @@ package org.wso2.carbon.api.analytics.alerts.core.internal;
 
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
+import org.wso2.carbon.api.analytics.alerts.core.DerivedAttribute;
 import org.wso2.carbon.event.builder.stub.types.EventBuilderConfigurationDto;
 import org.wso2.carbon.event.builder.stub.types.EventBuilderMessagePropertyDto;
 import org.wso2.carbon.event.formatter.stub.types.EventFormatterConfigurationDto;
@@ -42,8 +43,22 @@ public class AlertConfigurationHelper {
         String streamName = convertToSiddhiInputStreamName(configuration.getStreamDefinition().getName());
 
         StringBuilder builder = new StringBuilder("");
-        builder.append("from ");
-        builder.append(streamName);
+
+        if (configuration.getDerivedAttributes() != null) {
+            String query = getDerivedAttributesQuery(streamName, configuration.getDerivedAttributes().get(0)); // todo one query for initial impl.
+            builder.append(query).append(";");
+            builder.append("\n");
+
+            builder.append("from ");
+            builder.append(streamName).append("_temp");
+
+        } else {
+            builder.append("from ");
+            builder.append(streamName);
+
+        }
+
+
         builder.append('[');
 
         boolean concatenate = false;
@@ -69,6 +84,27 @@ public class AlertConfigurationHelper {
         }
         builder.append("] ");
         builder.append(" select * insert into ").append(getOutputStreamName(configuration));
+        return builder.toString();
+    }
+
+    private static String getDerivedAttributesQuery(String streamName, DerivedAttribute attribute) {
+
+        StringBuilder builder = new StringBuilder("");
+        // window
+        // select
+        // group by
+
+        builder.append("from ").append(streamName);
+        if (attribute.getAggregationType() != null) {
+            builder.append("#window.").append(attribute.getAggregationType()).append("(");
+            builder.append(attribute.getAggregationLength()).append(") ");
+        }
+        builder.append(" select ").append(attribute.getSelectExpressions());
+        if (attribute.getGroupByAttributes() != null) {
+            builder.append(" group by ");
+            builder.append(attribute.getGroupByAttributes());
+        }
+        builder.append(" insert into ").append(streamName).append("_temp");
         return builder.toString();
     }
 

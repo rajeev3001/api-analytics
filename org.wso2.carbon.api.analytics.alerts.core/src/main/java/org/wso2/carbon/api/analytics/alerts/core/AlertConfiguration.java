@@ -28,6 +28,7 @@ public class AlertConfiguration {
     // this can be the chart id
     private String configurationId;
 
+    private List<DerivedAttribute> derivedAttributes;
     private List<AlertConfigurationCondition> conditions;
     private StreamDefinition streamDefinition;
     private String inputStreamId;
@@ -91,5 +92,13 @@ public class AlertConfiguration {
 
     public void setInputStreamId(String inputStreamId) {
         this.inputStreamId = inputStreamId;
+    }
+
+    public List<DerivedAttribute> getDerivedAttributes() {
+        return derivedAttributes;
+    }
+
+    public void setDerivedAttributes(List<DerivedAttribute> derivedAttributes) {
+        this.derivedAttributes = derivedAttributes;
     }
 }

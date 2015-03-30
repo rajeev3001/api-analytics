@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.api.analytics.alerts.admin.internal.ds.AlertConfigurationAdminValueHolder;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
+import org.wso2.carbon.api.analytics.alerts.core.DerivedAttribute;
 import org.wso2.carbon.api.analytics.alerts.core.exception.AlertConfigurationException;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.AbstractAdmin;
@@ -62,6 +63,21 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
             throw new AxisFault("Configurations with no conditions are not allowed.");
         }
         alertConfig.setConditions(conditions);
+
+
+        if (configDto.getDerivedAttributes() != null) {
+            ArrayList<DerivedAttribute> derivedAttributes = new ArrayList<DerivedAttribute>();
+            for (DerivedAttributeDto attributeDto : configDto.getDerivedAttributes()) {
+                DerivedAttribute attribute = new DerivedAttribute();
+                attribute.setSelectExpressions(attributeDto.getSelectExpressions());
+                attribute.setGroupByAttributes(attributeDto.getGroupByAttributes());
+                attribute.setAggregationType(attributeDto.getAggregationType());
+                attribute.setAggregationLength(attributeDto.getAggregationLength());
+                derivedAttributes.add(attribute);
+            }
+            alertConfig.setDerivedAttributes(derivedAttributes);
+        }
+
         alertConfig.setOutputMapping(configDto.getOutputMapping());
 
         alertConfig.setInputStreamId(configDto.getInputStreamId());
@@ -153,8 +169,23 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
         }
 
         configDto.setAttributeDefinitions(streamDef.toString());
-        AlertConfigurationConditionDto[] conditionDtos = new AlertConfigurationConditionDto[config.getConditions().size()];
 
+        if (config.getDerivedAttributes() != null) {
+            int i = 0;
+            DerivedAttributeDto[] derivedAttributeDtos = new DerivedAttributeDto[config.getDerivedAttributes().size()];
+            for (DerivedAttribute attribute : config.getDerivedAttributes()) {
+                DerivedAttributeDto attributeDto = new DerivedAttributeDto();
+                attributeDto.setSelectExpressions(attribute.getSelectExpressions());
+                attributeDto.setGroupByAttributes(attribute.getGroupByAttributes());
+                attributeDto.setAggregationType(attribute.getAggregationType());
+                attributeDto.setAggregationLength(attribute.getAggregationLength());
+                derivedAttributeDtos[i] = attributeDto;
+                i++;
+            }
+            configDto.setDerivedAttributes(derivedAttributeDtos);
+        }
+
+        AlertConfigurationConditionDto[] conditionDtos = new AlertConfigurationConditionDto[config.getConditions().size()];
         int j = 0;
         for (AlertConfigurationCondition condition : config.getConditions()) {
             AlertConfigurationConditionDto conditionDto = new AlertConfigurationConditionDto();

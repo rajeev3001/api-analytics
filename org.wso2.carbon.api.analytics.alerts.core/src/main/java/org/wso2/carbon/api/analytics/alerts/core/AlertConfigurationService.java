@@ -51,7 +51,7 @@ public class AlertConfigurationService {
             alertConfiguration.setStreamDefinition(streamDefinition);
         }
 
-        // todo check if alert config alerady exists ....
+        // todo check if alert config already exists ....
 
         EventBuilderConfigurationDto builderDto = AlertConfigurationHelper.getEventBuilderDto(alertConfiguration);
         ExecutionPlanConfigurationDto execPlanDto = AlertConfigurationHelper.getExecutionPlanDto(alertConfiguration);
