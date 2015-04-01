@@ -18,7 +18,7 @@
 
 package org.wso2.carbon.api.analytics.alerts.core.internal;
 
-public class AlertConfigurationConstants {
+public interface AlertConfigurationConstants {
 
     public static final String CONFIG_PREFIX = "ac_";
     public static final String REGISTRY_PATH = "/APIAlertConfigurations";

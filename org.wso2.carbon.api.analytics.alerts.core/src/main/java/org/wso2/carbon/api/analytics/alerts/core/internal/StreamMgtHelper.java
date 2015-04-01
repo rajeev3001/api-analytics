@@ -104,7 +104,7 @@ public class StreamMgtHelper {
         String[] streamIds = getPredefinedStreamIds();
 
         for (StreamDefinitionDto dto : dtos) {
-            if (!AlertConfigurationHelper.isSiddhiInputStream(dto.getName())) {
+            if ((!AlertConfigurationHelper.isSiddhiInputStream(dto.getName())) && (!isTemporaryStream(dto.getName()))) {
                 // only the siddhi output streams are required to be added.
                 // existence of input streams are assumed.
 //            boolean exists =  checkStreamExists(dto.getName(), streamDefinition.getVersion());
@@ -300,6 +300,10 @@ public class StreamMgtHelper {
 
         definitionBuilder.append(" )");
         return definitionBuilder.toString();
+    }
+
+    private static boolean isTemporaryStream(String streamName) {
+        return streamName.endsWith("_temp");
     }
 
 }

@@ -21,93 +21,41 @@ package org.wso2.carbon.api.analytics.alerts.core;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.api.analytics.alerts.core.exception.AlertConfigurationException;
-import org.wso2.carbon.api.analytics.alerts.core.internal.AlertConfigurationClientFactory;
-import org.wso2.carbon.api.analytics.alerts.core.internal.AlertConfigurationHelper;
-import org.wso2.carbon.api.analytics.alerts.core.internal.AlertConfigurationStore;
-import org.wso2.carbon.api.analytics.alerts.core.internal.StreamMgtHelper;
+import org.wso2.carbon.api.analytics.alerts.core.internal.*;
+import org.wso2.carbon.api.analytics.alerts.core.internal.cepconfig.AdaptorBasedConfigurationClient;
+import org.wso2.carbon.api.analytics.alerts.core.internal.cepconfig.CEPConfigurationClient;
 import org.wso2.carbon.databridge.commons.StreamDefinition;
-import org.wso2.carbon.event.builder.stub.types.EventBuilderConfigurationDto;
-import org.wso2.carbon.event.formatter.stub.types.EventFormatterConfigurationDto;
-import org.wso2.carbon.event.processor.stub.types.ExecutionPlanConfigurationDto;
-import org.wso2.carbon.registry.api.RegistryException;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AlertConfigurationService {
 
     private static final Log log = LogFactory.getLog(AlertConfigurationService.class);
 
+    private CEPConfigurationClient cepClient;
+
     public AlertConfigurationService() {
+        // todo move this out & create this from config.
+        cepClient = new AdaptorBasedConfigurationClient();
     }
 
-    public boolean addAlertConfiguration(AlertConfiguration alertConfiguration, int tenantId) throws AlertConfigurationException {
+    public void addAlertConfiguration(AlertConfiguration alertConfiguration, int tenantId) throws AlertConfigurationException {
 
+        AlertConfigurationHelper.validateAlertConfiguration(alertConfiguration);
         if (alertConfiguration.getStreamDefinition() == null) {
             StreamDefinition streamDefinition = StreamMgtHelper.getStreamDefinition(alertConfiguration.getInputStreamId());
             alertConfiguration.setStreamDefinition(streamDefinition);
         }
-
-        // todo check if alert config already exists ....
-
-        EventBuilderConfigurationDto builderDto = AlertConfigurationHelper.getEventBuilderDto(alertConfiguration);
-        ExecutionPlanConfigurationDto execPlanDto = AlertConfigurationHelper.getExecutionPlanDto(alertConfiguration);
-        EventFormatterConfigurationDto formatterDto = AlertConfigurationHelper.getEventFormatterDto(alertConfiguration);
-
-        try {
-            // event stream is added by the datapublisher, until it is added, these will be inactive.
-            // todo add wso2 event inputs and email outputs - currently their existance is assumed..
-
-            AlertConfigurationClientFactory.getInstance().getEventBuilderAdminServiceClient().deployEventBuilderConfiguration(builderDto);
-            StreamMgtHelper.addRequiredStream(alertConfiguration.getStreamDefinition(), execPlanDto.getQueryExpressions());
-
-            AlertConfigurationClientFactory.getInstance().getEventProcessorAdminServiceClient().addExecutionPlan(execPlanDto);
-            AlertConfigurationClientFactory.getInstance().getEventFormatterAdminServiceClient().addEventFormatterConfiguration(formatterDto);
-
-            AlertConfigurationStore.getInstance().saveAlertConfiguration(alertConfiguration, tenantId);
-
-        } catch (RegistryException e) {
-            log.error("Error while saving alert configuration", e);
-            return false;
-        } catch (RemoteException e) {
-            log.error("Error while configuring cep.", e);
-            return false;
-        } catch (Exception e) {
-            log.error("Error while configuring alerts.", e);
-            return false;
-        }
-        return true;
+        cepClient.addAlertConfiguration(alertConfiguration, tenantId);
     }
 
     public void removeAlertConfiguration(String configurationId, int tenantId) throws AlertConfigurationException {
-        // todo do this for inactive ones too??
-
-        try {
-            AlertConfigurationClientFactory.getInstance().getEventFormatterAdminServiceClient().removeEventFormatterConfiguration(configurationId);
-
-            AlertConfigurationClientFactory.getInstance().getEventProcessorAdminServiceClient().removeExecutionPlan(configurationId);
-            AlertConfigurationClientFactory.getInstance().getEventBuilderAdminServiceClient().removeEventBuilderConfiguration(configurationId);
-
-            // cleaning up output stream.
-            AlertConfiguration config = AlertConfigurationStore.getInstance().getAlertConfiguration(configurationId, tenantId);
-            String outputStream = AlertConfigurationHelper.getOutputStreamName(config);
-            AlertConfigurationClientFactory.getInstance().getEventStreamManagerAdminServiceClient().removeEventStream(outputStream, config.getStreamDefinition().getVersion());
-
-            AlertConfigurationStore.getInstance().deleteAlertConfiguration(configurationId, tenantId);
-        } catch (RegistryException e) {
-            log.error("Error while removing the configurations.", e);
-        } catch (RemoteException e) {
-            log.error("Error while removing the configurations.", e);
-        }
+        cepClient.removeAlertConfiguration(configurationId, tenantId);
     }
-
 
     public List<AlertConfiguration> getAllAlertConfigurations(int tenantId) {
         List<AlertConfiguration> clonedList;
-
         try {
             List<AlertConfiguration> configList = AlertConfigurationStore.getInstance().getAllAlertConfigurations(tenantId);
             if (configList != null && configList.size() > 0) {

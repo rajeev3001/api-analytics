@@ -25,6 +25,10 @@ import java.util.Map;
 
 public class AlertConfiguration {
 
+
+    //
+
+
     // this can be the chart id
     private String configurationId;
 
