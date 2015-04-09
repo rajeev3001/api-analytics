@@ -46,7 +46,7 @@ public class StreamMgtHelper {
 
     public static String[] getPredefinedStreamIds() {
         try {
-            return AlertConfigurationClientFactory.getInstance().getEventStreamManagerAdminServiceClient().getStreamNames();
+            return AlertConfigurationClientHolder.getInstance().getEventStreamManagerAdminServiceClient().getStreamNames();
         } catch (RemoteException e) {
             log.error(e.getMessage(), e);
         }
@@ -55,7 +55,7 @@ public class StreamMgtHelper {
 
     public static StreamDefinition getStreamDefinition(String streamId) {
         try {
-            EventStreamDefinitionDto dto = AlertConfigurationClientFactory.getInstance().getEventStreamManagerAdminServiceClient().getStreamDefinitionDto(streamId);
+            EventStreamDefinitionDto dto = AlertConfigurationClientHolder.getInstance().getEventStreamManagerAdminServiceClient().getStreamDefinitionDto(streamId);
             StreamDefinition streamDefinition = new StreamDefinition(dto.getName(), dto.getVersion());
 
             if (dto.getMetaData() != null) {
@@ -95,7 +95,7 @@ public class StreamMgtHelper {
 
     public static StreamDefinitionDto[] getSiddhiStreams(StreamDefinition inStream, String queryExpressions) throws RemoteException {
         String inStreamDefinition = getSiddhiStreamDefinition(inStream);
-        return AlertConfigurationClientFactory.getInstance().getEventProcessorAdminServiceClient().getSiddhiStreams(new String[]{inStreamDefinition}, queryExpressions);
+        return AlertConfigurationClientHolder.getInstance().getEventProcessorAdminServiceClient().getSiddhiStreams(new String[]{inStreamDefinition}, queryExpressions);
     }
 
     public static void addRequiredStream(StreamDefinition streamDefinition, String queryExpressions) throws RemoteException {
@@ -163,7 +163,7 @@ public class StreamMgtHelper {
 
                     }
 
-                    AlertConfigurationClientFactory.getInstance().getEventStreamManagerAdminServiceClient().addEventStream(
+                    AlertConfigurationClientHolder.getInstance().getEventStreamManagerAdminServiceClient().addEventStream(
                             dto.getName(),
                             streamDefinition.getVersion(),
                             metaAttributeDtos,
@@ -216,7 +216,7 @@ public class StreamMgtHelper {
                 definitionBuilder.append("meta_" + attribute.getName());
                 switch (attribute.getType()) {
                     case BOOL:
-                        definitionBuilder.append(" boolean");
+                        definitionBuilder.append(" bool");
                         break;
                     case INT:
                         definitionBuilder.append(" int");
@@ -246,7 +246,7 @@ public class StreamMgtHelper {
                 definitionBuilder.append("correlation_" + attribute.getName());
                 switch (attribute.getType()) {
                     case BOOL:
-                        definitionBuilder.append(" boolean");
+                        definitionBuilder.append(" bool");
                         break;
                     case INT:
                         definitionBuilder.append(" int");
@@ -276,7 +276,7 @@ public class StreamMgtHelper {
                 definitionBuilder.append(attribute.getName());
                 switch (attribute.getType()) {
                     case BOOL:
-                        definitionBuilder.append(" boolean");
+                        definitionBuilder.append(" bool");
                         break;
                     case INT:
                         definitionBuilder.append(" int");
@@ -300,6 +300,10 @@ public class StreamMgtHelper {
 
         definitionBuilder.append(" )");
         return definitionBuilder.toString();
+    }
+
+    public static void removeStream(String name, String version) throws RemoteException {
+        AlertConfigurationClientHolder.getInstance().getEventStreamManagerAdminServiceClient().removeEventStream(name, version);
     }
 
     private static boolean isTemporaryStream(String streamName) {

@@ -44,6 +44,7 @@ public class EventFormatterAdminServiceClient {
         eventFormatterAdminServiceStub = new EventFormatterAdminServiceStub(ctx, endPoint);
         AuthenticationHelper.setBasicAuthHeaders(username, password, eventFormatterAdminServiceStub);
 
+
     }
 
     public EventFormatterConfigurationInfoDto[] getActiveEventFormatters()
@@ -53,6 +54,17 @@ public class EventFormatterAdminServiceClient {
         } catch (RemoteException e) {
             throw new RemoteException("RemoteException", e);
         }
+    }
+
+    public boolean containsEventFormatter(String formatterName) throws RemoteException {
+
+        EventFormatterConfigurationInfoDto[] dtos = eventFormatterAdminServiceStub.getAllActiveEventFormatterConfiguration();
+        for (EventFormatterConfigurationInfoDto dto : dtos) {
+            if (formatterName.equals(dto.getEventFormatterName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

@@ -29,6 +29,7 @@ import org.wso2.carbon.event.stream.manager.stub.EventStreamAdminServiceStub;
 import org.wso2.carbon.event.stream.manager.stub.types.EventStreamAttributeDto;
 import org.wso2.carbon.event.stream.manager.stub.types.EventStreamDefinitionDto;
 import org.wso2.carbon.event.stream.manager.stub.types.EventStreamInfoDto;
+import org.wso2.carbon.remotetasks.stub.admin.common.RemoteTaskAdminRemoteTasksExceptionException;
 
 import java.rmi.RemoteException;
 
@@ -108,5 +109,15 @@ public class EventStreamManagerAdminServiceClient {
             log.error("RemoteException", e);
             throw new RemoteException();
         }
+    }
+
+    public boolean containsStream(String streamId) throws RemoteException {
+        String[] allStreams = getStreamNames();
+        for (String stream : allStreams) {
+            if (streamId.equals(stream)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

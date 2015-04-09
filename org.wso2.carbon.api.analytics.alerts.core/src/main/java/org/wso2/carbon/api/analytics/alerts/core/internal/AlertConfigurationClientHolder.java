@@ -21,13 +21,13 @@ package org.wso2.carbon.api.analytics.alerts.core.internal;
 import org.apache.axis2.AxisFault;
 import org.wso2.carbon.api.analytics.alerts.core.internal.clients.*;
 
-public class AlertConfigurationClientFactory {
+public class AlertConfigurationClientHolder {
 
     private String backendUrl;
     private String username;
     private String password;
 
-    private static AlertConfigurationClientFactory instance;
+    private static AlertConfigurationClientHolder instance;
 
     private EventBuilderAdminServiceClient builderClient;
     private EventFormatterAdminServiceClient formatterClient;
@@ -36,9 +36,9 @@ public class AlertConfigurationClientFactory {
     private OutputEventAdaptorManagerAdminServiceClient outputAdaptorClient;
     private EventStreamManagerAdminServiceClient streamManagerClient;
 
-    public static AlertConfigurationClientFactory getInstance() {
+    public static AlertConfigurationClientHolder getInstance() {
         if (instance == null) {
-            instance = new AlertConfigurationClientFactory();
+            instance = new AlertConfigurationClientHolder();
         }
         return instance;
     }
@@ -88,7 +88,7 @@ public class AlertConfigurationClientFactory {
         return streamManagerClient;
     }
 
-    private AlertConfigurationClientFactory() {
+    private AlertConfigurationClientHolder() {
 
         // todo configure these params from apimgt.xml
 

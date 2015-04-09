@@ -22,6 +22,8 @@ import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfigurationCondition;
 import org.wso2.carbon.api.analytics.alerts.core.DerivedAttribute;
 import org.wso2.carbon.api.analytics.alerts.core.exception.AlertConfigurationException;
+import org.wso2.carbon.databridge.commons.Attribute;
+import org.wso2.carbon.databridge.commons.StreamDefinition;
 import org.wso2.carbon.event.builder.stub.types.EventBuilderConfigurationDto;
 import org.wso2.carbon.event.builder.stub.types.EventBuilderMessagePropertyDto;
 import org.wso2.carbon.event.formatter.stub.types.EventFormatterConfigurationDto;
@@ -34,6 +36,7 @@ import org.wso2.carbon.event.processor.stub.types.ExecutionPlanConfigurationDto;
 import org.wso2.carbon.event.processor.stub.types.SiddhiConfigurationDto;
 import org.wso2.carbon.event.processor.stub.types.StreamConfigurationDto;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -53,7 +56,7 @@ public class AlertConfigurationHelper {
         StringBuilder builder = new StringBuilder("");
 
         if (configuration.getDerivedAttributes() != null) {
-            String query = getDerivedAttributesQuery(streamName, configuration.getConfigurationId(), configuration.getDerivedAttributes().get(0)); // todo one query for initial impl.
+            String query = getDerivedAttributesQuery(streamName, configuration.getConfigurationId(), configuration.getDerivedAttributes().get(0), configuration.getStreamDefinition()); // todo one query for initial impl.
             builder.append(query).append(";");
             builder.append("\n");
 
@@ -95,20 +98,59 @@ public class AlertConfigurationHelper {
         return builder.toString();
     }
 
-    public static String getDerivedAttributesQuery(String streamName, String configurationId, DerivedAttribute attribute) {
+    public static String getDerivedAttributesQuery(String streamName, String configurationId, DerivedAttribute attribute, StreamDefinition inputStreamDef) {
 
         StringBuilder builder = new StringBuilder("");
-
         builder.append("from ").append(streamName);
         if (attribute.getAggregationType() != null) {
             builder.append("#window.").append(attribute.getAggregationType()).append("(");
             builder.append(attribute.getAggregationLength()).append(") ");
         }
-        builder.append(" select ").append(attribute.getSelectExpressions());
+        builder.append(" select ");
+        // adding other attributes if the stream exists
+        // all calculated attributes are added as payload data.
+        if (inputStreamDef != null) {
+            String[] attributes = attribute.getSelectExpressions().split(",");
+            HashSet<String> definedAttributes = new HashSet<String>(attributes.length);
+            for (String attributeSelection : attributes) {
+                String[] selectionParts = attributeSelection.trim().split(" ");
+                definedAttributes.add(selectionParts[selectionParts.length - 1]);
+            }
+            if (inputStreamDef.getMetaData() != null) {
+                for (Attribute at : inputStreamDef.getMetaData()) {
+                    if (!definedAttributes.contains(at.getName())) {
+                        builder.append("meta_" + at.getName());
+                        builder.append(",");
+                    }
+                }
+            }
+            if (inputStreamDef.getCorrelationData() != null) {
+                for (Attribute at : inputStreamDef.getCorrelationData()) {
+                    if (!definedAttributes.contains(at.getName())) {
+                        builder.append("correlation_" + at.getName());
+                        builder.append(",");
+                    }
+                }
+            }
+            builder.append(attribute.getSelectExpressions());
+
+            if (inputStreamDef.getPayloadData() != null) {
+                for (Attribute at : inputStreamDef.getPayloadData()) {
+                    if (!definedAttributes.contains(at.getName())) {
+                        builder.append(",");
+                        builder.append(at.getName());
+                    }
+                }
+            }
+        } else {
+            builder.append(attribute.getSelectExpressions());
+        }
+
         if (attribute.getGroupByAttributes() != null) {
             builder.append(" group by ");
             builder.append(attribute.getGroupByAttributes());
         }
+
         builder.append(" insert into ").append(getIntermediateStreamId(streamName, configurationId));
         return builder.toString();
     }
@@ -138,8 +180,37 @@ public class AlertConfigurationHelper {
         if (config.getConfigurationId() == null) {
             throw new AlertConfigurationException("Configuration id is null.");
         }
-        if (alphanumericPattern.matcher(config.getConfigurationId()).matches()) {
+        if (!alphanumericPattern.matcher(config.getConfigurationId()).matches()) {
             throw new AlertConfigurationException("Non alphanumeric characters exist in the configuration id.");
         }
+    }
+
+    private static String toSiddhiAttribute(Attribute at, String prefix) {
+        // type name
+        String siddhiAttribute = prefix + at.getName() + " ";
+        switch (at.getType()) {
+            case INT:
+                siddhiAttribute += "int";
+                break;
+            case FLOAT:
+                siddhiAttribute += "float";
+                break;
+
+            case DOUBLE:
+                siddhiAttribute += "double";
+                break;
+
+            case LONG:
+                siddhiAttribute += "long";
+                break;
+
+            case BOOL:
+                siddhiAttribute += "boolean";
+                break;
+            default:
+                siddhiAttribute += "string";
+
+        }
+        return siddhiAttribute;
     }
 }

@@ -20,7 +20,13 @@ package org.wso2.carbon.api.analytics.alerts.core.internal;
 
 public interface AlertConfigurationConstants {
 
-    public static final String CONFIG_PREFIX = "ac_";
-    public static final String REGISTRY_PATH = "/APIAlertConfigurations";
-    public static final String SIDDHI_INPUT_STREAM_SUFFIX = "_in";
+    String CONFIG_PREFIX = "ac_";
+    String REGISTRY_PATH = "/APIAlertConfigurations";
+    String SIDDHI_INPUT_STREAM_SUFFIX = "_in";
+
+    String ADAPTOR_TYPE_SMS = "sms";
+    String ADAPTOR_TYPE_EMAIL = "email";
+
+    String ADAPTOR_TYPE_EMAIL_NAME = "emailAlertsAdaptor";
+    String ADAPTOR_TYPE_SMS_NAME = "smsAlertsAdaptor";
 }

@@ -26,9 +26,6 @@ import java.util.Map;
 public class AlertConfiguration {
 
 
-    //
-
-
     // this can be the chart id
     private String configurationId;
 
@@ -41,6 +38,9 @@ public class AlertConfiguration {
     private Map<String, String> outputAttributes;
     private String outputStream;
     private String outputMapping;
+
+    private String endpoint;
+    private String outputAdaptorType;
 
     public List<AlertConfigurationCondition> getConditions() {
         return conditions;
@@ -105,4 +105,21 @@ public class AlertConfiguration {
     public void setDerivedAttributes(List<DerivedAttribute> derivedAttributes) {
         this.derivedAttributes = derivedAttributes;
     }
+
+    public String getEndpoint() {
+        return endpoint;
+    }
+
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public String getOutputAdaptorType() {
+        return outputAdaptorType;
+    }
+
+    public void setOutputAdaptorType(String outputAdaptorType) {
+        this.outputAdaptorType = outputAdaptorType;
+    }
+
 }

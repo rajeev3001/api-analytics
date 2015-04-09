@@ -31,6 +31,10 @@ public class AlertConfigurationDto {
     private String inputStreamId;
     private String outputMapping;
 
+    // 'sms' and 'email'
+    private String outputAdaptorType;
+    private String endpoint;
+
     public String getConfigurationId() {
         return configurationId;
     }
@@ -68,6 +72,22 @@ public class AlertConfigurationDto {
         return derivedAttributes;
     }
 
+    public String getOutputAdaptorType() {
+        return outputAdaptorType;
+    }
+
+    public void setOutputAdaptorType(String outputAdaptorType) {
+        this.outputAdaptorType = outputAdaptorType;
+    }
+
+    public String getEndpoint() {
+        return endpoint;
+    }
+
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
     public void setDerivedAttributes(DerivedAttributeDto[] derivedAttributes) {
         this.derivedAttributes = derivedAttributes;
     }
@@ -79,4 +99,6 @@ public class AlertConfigurationDto {
     public void setInputStreamId(String inputStreamId) {
         this.inputStreamId = inputStreamId;
     }
+
+
 }

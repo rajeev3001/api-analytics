@@ -30,6 +30,7 @@ import org.wso2.carbon.event.builder.stub.types.*;
 import org.wso2.carbon.event.builder.stub.types.PropertyDto;
 import org.wso2.carbon.event.formatter.stub.types.*;
 
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public class EventBuilderAdminServiceClient {
@@ -49,6 +50,17 @@ public class EventBuilderAdminServiceClient {
         AuthenticationHelper.setBasicAuthHeaders(username, password, eventBuilderAdminServiceStub);
 
     }
+
+    public boolean containsBuilderConfiguration(String builderName) throws RemoteException {
+        EventBuilderConfigurationInfoDto[] dtos = eventBuilderAdminServiceStub.getAllActiveEventBuilderConfigurations();
+        for (EventBuilderConfigurationInfoDto dto : dtos) {
+            if (builderName.equals(dto.getEventBuilderName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public void deployEventBuilderConfiguration(EventBuilderConfigurationDto dto) throws RemoteException {
 

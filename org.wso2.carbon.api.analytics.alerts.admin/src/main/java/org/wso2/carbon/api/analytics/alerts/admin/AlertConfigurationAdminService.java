@@ -105,6 +105,10 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
 
             alertConfig.setStreamDefinition(streamDefinition);
         }
+
+        alertConfig.setEndpoint(configDto.getEndpoint());
+        alertConfig.setOutputAdaptorType(configDto.getOutputAdaptorType());
+
         try {
             AlertConfigurationAdminValueHolder.getAlertConfigurationService().addAlertConfiguration(alertConfig, PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId());
         } catch (AlertConfigurationException e) {
@@ -197,6 +201,9 @@ public class AlertConfigurationAdminService extends AbstractAdmin {
         }
         configDto.setConditions(conditionDtos);
         configDto.setOutputMapping(config.getOutputMapping());
+
+        configDto.setOutputAdaptorType(config.getOutputAdaptorType());
+        configDto.setEndpoint(config.getEndpoint());
 
         return configDto;
     }

@@ -48,21 +48,6 @@ public class EventProcessorAdminServiceClient {
 
     }
 
-    public int getAllActiveExecutionPlanConfigurationCount()
-            throws RemoteException {
-        try {
-            ExecutionPlanConfigurationDto[] configs = eventProcessorAdminServiceStub.getAllActiveExecutionPlanConfigurations();
-            if (configs == null) {
-                return 0;
-            } else {
-                return configs.length;
-            }
-        } catch (RemoteException e) {
-            log.error("RemoteException", e);
-            throw new RemoteException();
-        }
-    }
-
     public ExecutionPlanConfigurationFileDto[] getExecutionPlanConfigurations()
             throws RemoteException {
         try {
@@ -71,6 +56,16 @@ public class EventProcessorAdminServiceClient {
             log.error("RemoteException", e);
             throw new RemoteException();
         }
+    }
+
+    public boolean containsExecutionPlan(String execPlanName) throws RemoteException {
+        ExecutionPlanConfigurationDto[] dtos = eventProcessorAdminServiceStub.getAllActiveExecutionPlanConfigurations();
+        for (ExecutionPlanConfigurationDto dto : dtos) {
+            if (execPlanName.equals(dto.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void addExecutionPlan(ExecutionPlanConfigurationDto executionPlanConfigurationDto)

@@ -70,13 +70,13 @@ public class AlertConfigurationValueHolder {
         return inputEventAdaptorType;
     }
 
-    public String getOutputEventAdaptorName() {
-        return outputEventAdaptorName;
-    }
-
-    public String getOutputEventAdaptorType() {
-        return outputEventAdaptorType;
-    }
+//    public String getOutputEventAdaptorName() {
+//        return outputEventAdaptorName;
+//    }
+//
+//    public String getOutputEventAdaptorType() {
+//        return outputEventAdaptorType;
+//    }
 
     public String getInputMappingType() {
         return inputMappingType;

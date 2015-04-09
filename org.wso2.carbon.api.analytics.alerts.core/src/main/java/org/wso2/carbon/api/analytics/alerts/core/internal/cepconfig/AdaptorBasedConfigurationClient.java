@@ -1,5 +1,6 @@
 package org.wso2.carbon.api.analytics.alerts.core.internal.cepconfig;
 
+import org.apache.axis2.AxisFault;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.api.analytics.alerts.core.AlertConfiguration;
@@ -13,9 +14,12 @@ import org.wso2.carbon.event.formatter.stub.types.TextOutputMappingDto;
 import org.wso2.carbon.event.formatter.stub.types.ToPropertyConfigurationDto;
 import org.wso2.carbon.event.input.adaptor.manager.stub.types.InputEventAdaptorConfigurationInfoDto;
 import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdaptorConfigurationInfoDto;
+import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdaptorPropertiesDto;
+import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdaptorPropertyDto;
 import org.wso2.carbon.event.processor.stub.types.ExecutionPlanConfigurationDto;
 import org.wso2.carbon.event.processor.stub.types.SiddhiConfigurationDto;
 import org.wso2.carbon.event.processor.stub.types.StreamConfigurationDto;
+import org.wso2.carbon.registry.core.utils.AccessControlConstants;
 
 import java.rmi.RemoteException;
 import java.util.Map;
@@ -34,14 +38,38 @@ public class AdaptorBasedConfigurationClient implements CEPConfigurationClient {
         EventFormatterConfigurationDto formatterDto = getEventFormatterDto(alertConfiguration);
 
         try {
+            // cleaning up existing artifacts.
+            boolean formatterExists = AlertConfigurationClientHolder.getInstance().getEventFormatterAdminServiceClient().containsEventFormatter(formatterDto.getEventFormatterName());
+            if (formatterExists) {
+                AlertConfigurationClientHolder.getInstance().getEventFormatterAdminServiceClient().removeEventFormatterConfiguration(formatterDto.getEventFormatterName());
+            }
+            boolean execPlanExists = AlertConfigurationClientHolder.getInstance().getEventProcessorAdminServiceClient().containsExecutionPlan(execPlanDto.getName());
+            if (execPlanExists) {
+                AlertConfigurationClientHolder.getInstance().getEventProcessorAdminServiceClient().removeExecutionPlan(execPlanDto.getName());
+            }
+            boolean builderExists = AlertConfigurationClientHolder.getInstance().getEventBuilderAdminServiceClient().containsBuilderConfiguration(builderDto.getEventBuilderConfigName());
+            if (builderExists) {
+                AlertConfigurationClientHolder.getInstance().getEventBuilderAdminServiceClient().removeEventBuilderConfiguration(builderDto.getEventBuilderConfigName());
+            }
+
+            if (alertConfiguration.getStreamDefinition() != null) {
+
+                String outStream = AlertConfigurationHelper.getOutputStreamName(alertConfiguration);
+                boolean streamDefExists = AlertConfigurationClientHolder.getInstance().getEventStreamManagerAdminServiceClient().containsStream(outStream + ":" + alertConfiguration.getStreamDefinition().getVersion());
+                if (streamDefExists) {
+                    StreamMgtHelper.removeStream(outStream, alertConfiguration.getStreamDefinition().getVersion());
+                }
+            }
+
+            addOutputAdaptors(alertConfiguration);
+
             // event stream is added by the datapublisher, until it is added, these will be inactive.
             // todo add wso2 event inputs and email outputs - currently their existence is assumed..
-
-            AlertConfigurationClientFactory.getInstance().getEventBuilderAdminServiceClient().deployEventBuilderConfiguration(builderDto);
+            AlertConfigurationClientHolder.getInstance().getEventBuilderAdminServiceClient().deployEventBuilderConfiguration(builderDto);
             StreamMgtHelper.addRequiredStream(alertConfiguration.getStreamDefinition(), execPlanDto.getQueryExpressions());
 
-            AlertConfigurationClientFactory.getInstance().getEventProcessorAdminServiceClient().addExecutionPlan(execPlanDto);
-            AlertConfigurationClientFactory.getInstance().getEventFormatterAdminServiceClient().addEventFormatterConfiguration(formatterDto);
+            AlertConfigurationClientHolder.getInstance().getEventProcessorAdminServiceClient().addExecutionPlan(execPlanDto);
+            AlertConfigurationClientHolder.getInstance().getEventFormatterAdminServiceClient().addEventFormatterConfiguration(formatterDto);
 
             AlertConfigurationStore.getInstance().saveAlertConfiguration(alertConfiguration, tenantId);
 
@@ -61,14 +89,14 @@ public class AdaptorBasedConfigurationClient implements CEPConfigurationClient {
     public void removeAlertConfiguration(String configurationId, int tenantId) throws AlertConfigurationException {
         // todo do this for inactive ones too??
         try {
-            AlertConfigurationClientFactory.getInstance().getEventFormatterAdminServiceClient().removeEventFormatterConfiguration(configurationId);
-            AlertConfigurationClientFactory.getInstance().getEventProcessorAdminServiceClient().removeExecutionPlan(configurationId);
-            AlertConfigurationClientFactory.getInstance().getEventBuilderAdminServiceClient().removeEventBuilderConfiguration(configurationId);
+            AlertConfigurationClientHolder.getInstance().getEventFormatterAdminServiceClient().removeEventFormatterConfiguration(configurationId);
+            AlertConfigurationClientHolder.getInstance().getEventProcessorAdminServiceClient().removeExecutionPlan(configurationId);
+            AlertConfigurationClientHolder.getInstance().getEventBuilderAdminServiceClient().removeEventBuilderConfiguration(configurationId);
 
             // cleaning up output stream.
             AlertConfiguration config = AlertConfigurationStore.getInstance().getAlertConfiguration(configurationId, tenantId);
             String outputStream = AlertConfigurationHelper.getOutputStreamName(config);
-            AlertConfigurationClientFactory.getInstance().getEventStreamManagerAdminServiceClient().removeEventStream(outputStream, config.getStreamDefinition().getVersion());
+            AlertConfigurationClientHolder.getInstance().getEventStreamManagerAdminServiceClient().removeEventStream(outputStream, config.getStreamDefinition().getVersion());
 
             AlertConfigurationStore.getInstance().deleteAlertConfiguration(configurationId, tenantId);
         } catch (org.wso2.carbon.registry.api.RegistryException e) {
@@ -170,21 +198,53 @@ public class AdaptorBasedConfigurationClient implements CEPConfigurationClient {
         dto.setTextOutputMappingDto(txtDto);
 
         ToPropertyConfigurationDto toDto = new ToPropertyConfigurationDto();
-        toDto.setEventAdaptorName(AlertConfigurationValueHolder.getInstance().getOutputEventAdaptorName());
-        toDto.setEventAdaptorType(AlertConfigurationValueHolder.getInstance().getOutputEventAdaptorType());
 
-        EventFormatterPropertyDto[] propDto = new EventFormatterPropertyDto[AlertConfigurationValueHolder.getInstance().getOutputAdaptorProperties().keySet().size()];
-        int i = 0;
-        for (Map.Entry<String, String> entry : AlertConfigurationValueHolder.getInstance().getOutputAdaptorProperties().entrySet()) {
-            propDto[i] = new EventFormatterPropertyDto();
-            propDto[i].setKey(entry.getKey());
-            propDto[i].setValue(entry.getValue());
-            i++;
+        if (AlertConfigurationConstants.ADAPTOR_TYPE_SMS.equals( config.getOutputAdaptorType())) {
+            toDto.setEventAdaptorType(AlertConfigurationConstants.ADAPTOR_TYPE_SMS);
+            toDto.setEventAdaptorName(AlertConfigurationConstants.ADAPTOR_TYPE_SMS_NAME);
+            EventFormatterPropertyDto[] propDto = new EventFormatterPropertyDto[1];
+            propDto[0] = new EventFormatterPropertyDto();
+            propDto[0].setKey("sms.no");
+            propDto[0].setValue(config.getEndpoint());
+            toDto.setOutputEventAdaptorMessageConfiguration(propDto);
+
+        } else {
+            toDto.setEventAdaptorType(AlertConfigurationConstants.ADAPTOR_TYPE_EMAIL);
+            toDto.setEventAdaptorName(AlertConfigurationConstants.ADAPTOR_TYPE_EMAIL_NAME);
+            // email adaptor config
+            EventFormatterPropertyDto[] propDto = new EventFormatterPropertyDto[2];
+            propDto[0] = new EventFormatterPropertyDto();
+            propDto[0].setKey("email.address");
+            propDto[0].setValue(config.getEndpoint());
+
+            propDto[1] = new EventFormatterPropertyDto();
+            propDto[1].setKey("email.subject");
+            propDto[1].setValue("API Alerts");
+            toDto.setOutputEventAdaptorMessageConfiguration(propDto);
         }
-
-        toDto.setOutputEventAdaptorMessageConfiguration(propDto);
         dto.setToPropertyConfigurationDto(toDto);
         return dto;
+    }
+
+    public void addOutputAdaptors(AlertConfiguration config) throws RemoteException {
+        String[] adaptorNames = AlertConfigurationClientHolder.getInstance().getOutputEventAdaptorAdminServiceClient().getAllOutputEventAdaptorNames();
+        String adaptorName;
+        if (AlertConfigurationConstants.ADAPTOR_TYPE_SMS.equals(config.getOutputAdaptorType())) {
+            adaptorName = AlertConfigurationConstants.ADAPTOR_TYPE_SMS_NAME;
+        } else {
+            adaptorName = AlertConfigurationConstants.ADAPTOR_TYPE_EMAIL_NAME;
+        }
+
+        for (String name: adaptorNames) {
+            if (adaptorName.equals(name)) {
+                return;
+            }
+        }
+
+        OutputEventAdaptorPropertyDto[] props = new OutputEventAdaptorPropertyDto[0];
+        AlertConfigurationClientHolder.getInstance().getOutputEventAdaptorAdminServiceClient().addOutputEventAdaptorConfiguration(
+                adaptorName, config.getOutputAdaptorType(), props);
+
     }
 
 

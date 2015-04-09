@@ -21,6 +21,8 @@ package org.wso2.carbon.api.analytics.alerts.core.internal.clients;
 
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.client.ServiceClient;
+import org.apache.axis2.context.ConfigurationContext;
+import org.apache.axis2.context.ConfigurationContextFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.output.adaptor.manager.stub.OutputEventAdaptorManagerAdminServiceStub;
@@ -28,6 +30,7 @@ import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdapto
 import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdaptorFileDto;
 import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdaptorPropertiesDto;
 import org.wso2.carbon.event.output.adaptor.manager.stub.types.OutputEventAdaptorPropertyDto;
+import org.wso2.carbon.event.processor.stub.EventProcessorAdminServiceStub;
 
 import java.rmi.RemoteException;
 
@@ -37,25 +40,15 @@ public class OutputEventAdaptorManagerAdminServiceClient {
     private OutputEventAdaptorManagerAdminServiceStub outputEventAdaptorManagerAdminServiceStub;
     private String endPoint;
 
-    public OutputEventAdaptorManagerAdminServiceClient(String backEndUrl, String sessionCookie)
-            throws AxisFault {
-        this.endPoint = backEndUrl + serviceName;
-        outputEventAdaptorManagerAdminServiceStub = new OutputEventAdaptorManagerAdminServiceStub(endPoint);
-        AuthenticationHelper.authenticateStub(sessionCookie, outputEventAdaptorManagerAdminServiceStub);
-
-    }
 
     public OutputEventAdaptorManagerAdminServiceClient(String backEndUrl, String userName, String password)
             throws AxisFault {
         this.endPoint = backEndUrl + serviceName;
-        outputEventAdaptorManagerAdminServiceStub = new OutputEventAdaptorManagerAdminServiceStub(endPoint);
+        ConfigurationContext ctx = ConfigurationContextFactory.createConfigurationContextFromFileSystem(null, null);
+        outputEventAdaptorManagerAdminServiceStub = new OutputEventAdaptorManagerAdminServiceStub(ctx, endPoint);
         AuthenticationHelper.setBasicAuthHeaders(userName, password, outputEventAdaptorManagerAdminServiceStub);
-
     }
 
-    public ServiceClient _getServiceClient() {
-        return outputEventAdaptorManagerAdminServiceStub._getServiceClient();
-    }
 
     public String[] getAllOutputEventAdaptorNames() throws RemoteException {
         String[] inputTransportAdaptorNames = null;
@@ -90,20 +83,6 @@ public class OutputEventAdaptorManagerAdminServiceClient {
                 return 0;
             } else {
                 return configs.length;
-            }
-        } catch (RemoteException e) {
-            throw new RemoteException("RemoteException", e);
-        }
-    }
-
-    public int getOutputEventAdaptorConfigurationCount()
-            throws RemoteException {
-        try {
-            OutputEventAdaptorFileDto[] configs = outputEventAdaptorManagerAdminServiceStub.getAllInactiveOutputEventAdaptorConfiguration();
-            if (configs == null) {
-                return getActiveOutputEventAdaptorConfigurationCount();
-            } else {
-                return configs.length + getActiveOutputEventAdaptorConfigurationCount();
             }
         } catch (RemoteException e) {
             throw new RemoteException("RemoteException", e);
